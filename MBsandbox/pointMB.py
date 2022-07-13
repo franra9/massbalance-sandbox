@@ -26,10 +26,13 @@ import os
 
 import oggm
 from oggm import cfg, utils, workflow, tasks, graphics, entity_task
-from oggm.utils import date_to_floatyear
+from oggm.utils import (date_to_floatyear, floatyear_to_date, clip_array, clip_min)
 from oggm.shop import gcm_climate
 from oggm.core import massbalance, flowline, climate
 from oggm.cfg import SEC_IN_YEAR, SEC_IN_MONTH, SEC_IN_DAY
+from oggm.exceptions import InvalidParamsError, InvalidWorkflowError
+
+import warnings
 
 import logging
 
@@ -108,7 +111,7 @@ melt_f = 200
 pf = 1.5
 
 ###############################################################################
-# here the fun starts: this will be onverted into TIModel_Sfc_Type_point class.
+# here the fun starts: this will be converted into TIModel_Sfc_Type_point class.
 hbins = np.NaN # Default is np.NaN
 interpolation_optim = False # Default is False
 
@@ -122,14 +125,11 @@ melt_f_ratio_snow_to_ice = 0.5 # Default is 0.5
 melt_f_update = melt_f_update
 spinup_yrs = 6 # Default is 6 years
 # amount of bucket and bucket naming depends on melt_f_update:
-if melt_f_update == 'annual':
-    buckets = ['snow', 'firn_yr_1', 'firn_yr_2', 'firn_yr_3',
-                    'firn_yr_4', 'firn_yr_5']
-elif melt_f_update == 'monthly':
+if melt_f_update == 'monthly':
     # for each month over 6 years a bucket-> in total 72!
     buckets = np.arange(0, 12 * 6, 1).tolist()
 else:
-    raise Exception('melt_f_update can either be annual or monthly!') #InvalidParamsError('melt_f_update can either be annual or monthly!')
+    raise Exception('melt_f_update has to be monthly in our case!') #InvalidParamsError('melt_f_update can either be annual or monthly!')
 # first bucket: if annual it is 'snow', if monthly update it is 0
 first_snow_bucket = buckets[0]
 
@@ -177,24 +177,351 @@ pd_bucket = pd_bucket
 
 mb_geodetic = np.array(-800) # from zaragoza people 2011-2020
 
-years = np.arange(2011, 2020, 1)
-    
+years = np.arange(2011-6, 2020, 1)
+ys=2011-6
+ye=2020
 #mb_specific = mb_mod_monthly_0_5_m.get_specific_mb(heights=h,
 #                                        widths=w,
 #                                        year=years
 #                                        )#.mean()
 
+# as self.prcp is produced by changing prcp_fac
+# we need to update the prcp via prcp_fac by a property (see code after __init__)
+# (reason why there is here only a self._prcp_fac and no self.prcp_fac)
+#  to allow prcp_fac to be changed after instantiation
+#  prescribe the prcp_fac as it is instantiated
+prcp_fac = 2.89
+_prcp_fac = prcp_fac #because it is takes as constant.
+# same is true for temp bias
+_temp_bias = 0.
+residual = 0.
+default_grad = -0.0065 #K/m, lapse rate
+temp_local_gradient_bounds = [-0.009, -0.003]
+
+# temperature threshold where snow/ice melts
+t_melt = 0.
+t_solid = 0
+t_liq = 2
+
 rho=800
 
+input_filesuffix = '_daily_{}'.format(baseline_climate)
+filename = 'climate_historical'
+
+fpath = gdir.get_filepath(filename, filesuffix=input_filesuffix)
+
+
+#xr.open_dataset(fpath) as xr_nc
+with xr.open_dataset(fpath) as xr_nc:
+    if mb_type == 'mb_real_daily' or mb_type == 'mb_monthly':
+        # even if there is temp_std inside the dataset, we won't use
+        # it for these mb_types
+        temp_std = np.NaN
+
+    # goal is to get self.years/self.months in hydro_years
+    # (only important for TIModel if we do not use calendar years,
+    # for TIModel_Sfc_Type, we can only use calendar years anyways!)
+
+    # get the month where the hydrological month starts
+    # as chosen from the gdir climate file
+    hydro_month_start = int(xr_nc.time[0].dt.month.values)
+    # if we actually use TIModel_Sfc_Type -> hydro_month has to be 1
+### not sure
+#    if type(self) == TIModel_Sfc_Type:
+#        if hydro_month_start != 1 or cfg.PARAMS[f'hydro_month_{self.hemisphere}'] != 1:
+#            raise InvalidWorkflowError('TIModel_Sfc_Type works only with calendar years, set '
+#                                       'cfg.PARAMS["hydro_month_nh"] (or sh)'
+#                                       ' to 1 and process the climate data again')
+
+    if mb_type == 'mb_real_daily':
+        # use pandas to convert month/year to hydro_years
+        # this has to be done differently than above because not
+        # every month, year has the same amount of days
+        pd_test = pd.DataFrame(xr_nc.time.to_series().dt.year.values,
+                               columns=['year'])
+        pd_test.index = xr_nc.time.to_series().values
+        pd_test['month'] = xr_nc.time.to_series().dt.month.values
+        pd_test['hydro_year'] = np.NaN
+
+        if hydro_month_start == 1:
+            # hydro_year corresponds to normal year
+            pd_test.loc[pd_test.index.month >= hydro_month_start,
+                        'hydro_year'] = pd_test['year']
+        else:
+            pd_test.loc[pd_test.index.month < hydro_month_start,
+                        'hydro_year'] = pd_test['year']
+            # otherwise, those days with a month>=hydro_month_start
+            # belong to the next hydro_year
+            pd_test.loc[pd_test.index.month >= hydro_month_start,
+                        'hydro_year'] = pd_test['year']+1
+        # month_hydro is 1 if it is hydro_month_start
+        month_hydro = pd_test['month'].values+(12-hydro_month_start+1)
+        month_hydro[month_hydro > 12] += -12
+        pd_test['hydro_month'] = month_hydro
+        pd_test = pd_test.astype('int')
+        years = pd_test['hydro_year'].values
+        ny = years[-1] - years[0]+1
+        months = pd_test['hydro_month'].values
+    # Read timeseries and correct it
+    temp = xr_nc['temp'].values.astype(np.float64) + _temp_bias
+    # this is prcp computed by instantiation
+    # this changes if prcp_fac is updated (see @property)
+    prcp = xr_nc['prcp'].values.astype(np.float64) * _prcp_fac
+
+    # lapse rate (temperature gradient)
+    if grad_type == 'var' or grad_type == 'var_an_cycle':
+        try:
+            # need this to ensure that gradients are not fill-values
+            xr_nc['gradient'] = xr_nc['gradient'].where(xr_nc['gradient'] < 1e12)
+            grad = xr_nc['gradient'].values.astype(np.float64)
+            # Security for stuff that can happen with local gradients
+            g_minmax = temp_local_gradient_bounds
+
+            # if gradient is not a number, or positive/negative
+            # infinity, use the default gradient
+            grad = np.where(~np.isfinite(grad), default_grad, grad)
+
+            # if outside boundaries of default -0.009 and above
+            # -0.003 -> use the boundaries instead
+            grad = clip_array(grad, g_minmax[0], g_minmax[1])
+
+            if grad_type == 'var_an_cycle':
+                # if we want constant lapse rates over the years
+                # that change over the annual cycle, but not over time
+                if mb_type == 'mb_real_daily':
+                    grad_gb = xr_nc['gradient'].groupby('time.month')
+                    grad = grad_gb.mean().values
+                    g_minmax = temp_local_gradient_bounds
+
+                    # if gradient is not a number, or positive/negative
+                    # infinity, use the default gradient
+                    grad = np.where(~np.isfinite(grad), default_grad,
+                                    grad)
+                    assert np.all(grad < 1e12)
+                    # if outside boundaries of default -0.009 and above
+                    # -0.003 -> use the boundaries instead
+                    grad = clip_array(grad, g_minmax[0], g_minmax[1])
+
+                    stack_grad = grad.reshape(-1, 12)
+                    grad = np.tile(stack_grad.mean(axis=0), ny)
+                    reps_day1 = xr_nc.time[xr_nc.time.dt.day == 1]
+                    reps = reps_day1.dt.daysinmonth
+                    grad = np.repeat(grad, reps)
+
+                else:
+                    stack_grad = grad.reshape(-1, 12)
+                    grad = np.tile(stack_grad.mean(axis=0), ny)
+        except KeyError:
+            text = ('there is no gradient available in chosen climate'
+                    'file, try instead e.g. ERA5_daily or ERA5dr e.g.'
+                    'oggm.shop.ecmwf.process_ecmwf_data'
+                    '(gd, dataset="ERA5dr")')
+
+            raise InvalidParamsError(text)
+
+    elif grad_type == 'cte':
+        # if grad_type is chosen cte, we use the default_grad!
+        grad = prcp * 0 + default_grad
+    else:
+        raise InvalidParamsError('grad_type can be either cte,'
+                                 'var or var_an_cycle')
+    grad = grad
+    ref_hgt = xr_nc.ref_hgt # i guess refference hgt is the default altitude of the climate data
+    # if climate dataset has been corrected once again
+    # or non corrected reference height!
+    #try:
+    #    self.uncorrected_ref_hgt = xr_nc.uncorrected_ref_hgt
+    #except:
+    #    self.uncorrected_ref_hgt = xr_nc.ref_hgt
+
+    ys = years[0] if ys is None else ys
+    ye = years[-1] if ye is None else ye
+
 
 ####
 #
+#######
+def _get_tempformelt(temp, pok):
+    """ Helper function to compute tempformelt to avoid code duplication
+    in get_monthly_climate() and _get2d_annual_climate()
+
+    comment: I can't use  _get_tempformelt outside the class, but sometimes this could be useful.
+    If using this again outside of this class, need to remove the "self",
+    such as for 'mb_climate_on_height' in climate.py, that has no self....
+    (would need to change temp, t_melt ,temp_std, mb_type, N, loop)
+
+    Parameters
+    -------
+        temp: ndarray
+            temperature time series
+        pok: ndarray
+            indices of time series
+
+    Returns
+    -------
+    (tempformelt)
+    """
+
+    tempformelt_without_std = temp - t_melt
+
+    # computations change only if 'mb_pseudo_daily' as mb_type!
+    if mb_type == 'mb_monthly' or mb_type == 'mb_real_daily':
+        tempformelt = tempformelt_without_std
+
+    else:
+        raise InvalidParamsError('mb_type can only be "mb_monthly,\
+                                 mb_pseudo_daily or mb_real_daily" ')
+    #  replace all values below zero to zero
+    # todo: exectime this is also quite expensive
+    clip_min(tempformelt, 0, out=tempformelt)
+
+    return tempformelt
+
+
+
 ####
+# define here _get_climate?
+def _get_climate(heights, climate_type, year=None):
+    """ Climate information at given heights.
+
+    Note that prcp is corrected with the precipitation factor and that
+    all other model biases (temp and prcp) are applied.
+
+    same as in OGGM default except that tempformelt is computed by
+    self._get_tempformelt
+
+    Parameters
+    -------
+    heights : np.array or list
+        heights along flowline
+    climate_type : str
+        either 'monthly' or 'annual', if annual floor of year is used,
+        if monthly float year is converted into month and year
+    year : float
+        float hydro year from what both, year and month, are taken if climate_type is monthly.
+        hence year 2000 -> y=2000, m = 1, & year = 2000.09, y=2000, m=2 ...
+        which corresponds to the real year 1999 and months October or November
+        if hydro year starts in October
+
+    Returns
+    -------
+    (temp, tempformelt, prcp, prcpsol)
+    """
+
+    y, m = floatyear_to_date(year)
+    if y < ys or y > ye:
+        raise ValueError('year {} out of the valid time bounds: '
+                         '[{}, {}]'.format(y, ys, ye))
+
+    if mb_type == 'mb_real_daily' or climate_type == 'annual':
+        pok = np.where((years == y) & (months == m))[0]
+        if len(pok) < 28:
+            warnings.warn('something goes wrong with amount of entries\
+                          per month for mb_real_daily')
+    # Read time series
+    # (already temperature bias and precipitation factor corrected!)
+    itemp = temp[pok]
+    prcp = xr_nc['prcp'].values.astype(np.float64) * _prcp_fac # problems with the scope if I dont define it here...
+    iprcp = prcp[pok]
+    igrad = grad[pok]
+
+    # For each height pixel:
+    # Compute temp and tempformelt (temperature above melting threshold)
+    heights = np.asarray(heights)
+    #npix = len(heights)
+    npix = 1
+    if mb_type == 'mb_real_daily' or climate_type == 'annual':
+        grad_temp = np.atleast_2d(igrad).repeat(npix, 0)
+        # todo: exectime the line code below is quite expensive in TIModel
+        grad_temp *= (heights.repeat(len(pok)).reshape(grad_temp.shape) -
+                      ref_hgt)
+        temp2d = np.atleast_2d(itemp).repeat(npix, 0) + grad_temp
+        print(itemp)
+        # temp_for_melt is computed separately depending on mb_type
+        # todo: exectime the line code below is quite expensive in TIModel
+        temp2dformelt = _get_tempformelt(temp2d, pok)
+
+        # Compute solid precipitation from total precipitation
+        prcp = np.atleast_2d(iprcp).repeat(npix, 0)
+        fac = 1 - (temp2d - t_solid) / (t_liq - t_solid)
+        # line code below also quite expensive!
+        prcpsol = prcp * clip_array(fac, 0, 1)
+        return temp2d, temp2dformelt, prcp, prcpsol
+
+####
+#get lapse rate and climate data, if will be used in _get_climate:
+
+
+
 
 ########
-# define here _get_climate?
-#
-#
+# def _get_2d_monthly_climate(self, heights, year=None):
+def _get_2d_monthly_climate(heights, year=None): # this is the same as _get climate!
+    # only works with real daily climate data!
+    # (is used by get_monthly_mb of TIModel)
+    # comment: as it is not used in TIModel_Sfc_type it could also directly go inside of TIModel ?!
+    if mb_type == 'mb_real_daily':
+        return _get_climate(heights, 'monthly', year=year)
+    else:
+        raise InvalidParamsError('_get_2d_monthly_climate works only\
+                                 with mb_real_daily as mb_type!!!')
+
+########
+# from # class TIModel(TIModel_Parent):
+def get_monthly_mb(heights, year=None, add_climate=False,
+                   **kwargs):
+    """ computes annual mass balance in m of ice per second!
+
+    Attention year is here in hydro float year
+
+    year has to be given as float hydro year from what the month is taken,
+    hence year 2000 -> y=2000, m = 1, & year = 2000.09, y=2000, m=2 ...
+    which corresponds to the real year 1999 and months October or November
+    if hydro year starts in October
+    """
+    # todo: can actually remove **kwargs???
+    # comment: get_monthly_mb and get_annual_mb are only different
+    #  to OGGM default for mb_real_daily
+
+    if mb_type == 'mb_real_daily':
+        # get 2D values, dependencies on height and time (days)
+        out = _get_2d_monthly_climate(heights, year)
+        t, temp2dformelt, prcp, prcpsol = out
+        # (days per month)
+        # dom = 365.25/12  # len(prcpsol.T)
+        fact = 12/365.25
+        # attention, I should not use the days of years as the melt_f is
+        # per month ~mean days of that year 12/daysofyear
+        # to have the same unit of melt_f, which is
+        # the monthly temperature sensitivity (kg /m² /mth /K),
+        mb_daily = prcpsol - melt_f * temp2dformelt * fact
+
+        mb_month = np.sum(mb_daily, axis=1)
+        # more correct than using a mean value for days in a month
+        #warnings.warn('there might be a problem with SEC_IN_MONTH'
+        #              'as February changes amount of days inbetween the years'
+        #              ' see test_monthly_glacier_massbalance()')
+
+    # residual is in mm w.e per year, so SEC_IN_MONTH ... but mb_month
+    # should be per month!
+    mb_month -= residual * SEC_IN_MONTH / SEC_IN_YEAR
+    # this is for mb_pseudo_daily otherwise it gives the wrong shape
+    mb_month = mb_month.flatten()
+    # if add_climate: #default is False
+        # if self.mb_type == 'mb_real_daily':
+        #     # for run_with_hydro want to get monthly output (sum of daily),
+        #     # if we want daily output in run_with_hydro need to directly use get_daily_mb()
+        #     prcp = prcp.sum(axis=1)
+        #     prcpsol = prcpsol.sum(axis=1)
+        #     t = t.mean(axis=1)
+        #     temp2dformelt = temp2dformelt.sum(axis=1)
+        # if self.mb_type == 'mb_pseudo_daily':
+        #     temp2dformelt = temp2dformelt.flatten()
+        # return (mb_month / SEC_IN_MONTH / self.rho, t, temp2dformelt,
+        #         prcp, prcpsol)
+    # instead of SEC_IN_MONTH, use instead len(prcpsol.T)==daysinmonth
+    return mb_month / SEC_IN_MONTH / rho
+
 #######
 def _get_2d_annual_climate(heights, year):
     return _get_climate(heights, 'annual', year=year)
@@ -202,174 +529,161 @@ def _get_2d_annual_climate(heights, year):
 #### this is adapted from a method from the class
 #   mbmod_daily_oneflowline.TIModel_Sfc_Type
 ####
-def get_annual_mb(heights, year=None, unit='m_of_ice',
-                  bucket_output=False, spinup=True,
-                  add_climate=False,
-                  auto_spinup=True,
-                  **kwargs):
-    """
-    computes annual mass balance in m of ice per second
+# def get_annual_mb(heights, year=None, unit='m_of_ice',
+#                   bucket_output=False, spinup=True,
+#                   add_climate=False,
+#                   auto_spinup=True,
+#                   **kwargs):
+#     """
+#     computes annual mass balance in m of ice per second
 
-    Parameters
-    ----------
-    heights : np.array
-        at the moment works only with inversion heights!
-    year: int
-        integer CALENDAR year! if melt_f_update='monthly', it will loop over each month.
-    unit : str
-        default is 'm of ice', nothing else implemented at the moment!
-        comment: include option of metre of glacier where the different densities
-         are taken into account but in this case would need to add further columns in pd_buckets
-         like: snow_delta_kg/m2 ... and so on (only important if I add refreezing or a densification scheme)
-    bucket_output: bool (default is False)
-        if True, returns as second output the pd.Dataframe with details about
-        amount of kg/m2 for each bucket and height grid point,
-        set it to True to visualize how the buckets change over time or for testing
-        (these are the buckets before they got updated for the next year!)
-    spinup : bool (default is True)
-        if a spinup is applied to fill up sfc type buckets beforehand
-        (default are 6 years, check under spinup_yrs)
-    add_climate: bool (default is False)
-        for run_with_hydro (not yet implemented!)
-        todo: implement and test it
-    auto_spinup: bool (default is true)
-        if True, it automatically computes the spinup years (default is 6) beforehand (however in this case,
-        these 6 years at the beginning, although saved in pd_mb_annual, had no spinup...)
-        todo: maybe need to add a '_no_spinup' to those that had no spinup?
-         or save them in a separate pd.DataFrame?
-    **kwargs:
-        other stuff passed to get_monthly_mb or to _add_delta_mb_vary_melt_f
-        **kwargs necessary to take stuff we don't use (like fls...)
+#     Parameters
+#     ----------
+#     heights : np.array
+#         at the moment works only with inversion heights!
+#     year: int
+#         integer CALENDAR year! if melt_f_update='monthly', it will loop over each month.
+#     unit : str
+#         default is 'm of ice', nothing else implemented at the moment!
+#         comment: include option of metre of glacier where the different densities
+#          are taken into account but in this case would need to add further columns in pd_buckets
+#          like: snow_delta_kg/m2 ... and so on (only important if I add refreezing or a densification scheme)
+#     bucket_output: bool (default is False)
+#         if True, returns as second output the pd.Dataframe with details about
+#         amount of kg/m2 for each bucket and height grid point,
+#         set it to True to visualize how the buckets change over time or for testing
+#         (these are the buckets before they got updated for the next year!)
+#     spinup : bool (default is True)
+#         if a spinup is applied to fill up sfc type buckets beforehand
+#         (default are 6 years, check under spinup_yrs)
+#     add_climate: bool (default is False)
+#         for run_with_hydro (not yet implemented!)
+#         todo: implement and test it
+#     auto_spinup: bool (default is true)
+#         if True, it automatically computes the spinup years (default is 6) beforehand (however in this case,
+#         these 6 years at the beginning, although saved in pd_mb_annual, had no spinup...)
+#         todo: maybe need to add a '_no_spinup' to those that had no spinup?
+#          or save them in a separate pd.DataFrame?
+#     **kwargs:
+#         other stuff passed to get_monthly_mb or to _add_delta_mb_vary_melt_f
+#         **kwargs necessary to take stuff we don't use (like fls...)
 
-    """
+#     """
 
-    # when we set spinup_yrs to zero, then there should be no spinup occurring, even if spinup
-    # is set to True
-    if spinup_yrs == 0:
-        spinup = False
+#     # when we set spinup_yrs to zero, then there should be no spinup occurring, even if spinup
+#     # is set to True
+#     if spinup_yrs == 0:
+#         spinup = False
 
-    if len(pd_mb_annual.columns) > 0:
-        if pd_mb_annual.columns[0] > pd_mb_annual.columns[-1]:
-            raise Exception('need to run years in ascending order! Maybe reset first!')
-    # dirty check that the given heights are in the right order
-    assert heights[0] > heights[-1], "heights should be in descending order!"
-    # otherwise pd_buckets does not work ...
-    # below would be a more robust test, but this is not compatible to all use cases:
-    # np.testing.assert_allclose(heights, inv_heights,
-    #                           err_msg='the heights should correspond to the inversion heights',
-    #                           )
-    # np.testing.assert_allclose(heights, mod_heights)
+#     if len(pd_mb_annual.columns) > 0:
+#         if pd_mb_annual.columns[0] > pd_mb_annual.columns[-1]:
+#             raise Exception('need to run years in ascending order! Maybe reset first!')
+#     # dirty check that the given heights are in the right order
+#     #assert heights[0] > 0, 'only positive altitudes make sense!'#heights[-1], "heights should be in descending order!"
+#     # otherwise pd_buckets does not work ...
+#     # below would be a more robust test, but this is not compatible to all use cases:
+#     # np.testing.assert_allclose(heights, inv_heights,
+#     #                           err_msg='the heights should correspond to the inversion heights',
+#     #                           )
+#     # np.testing.assert_allclose(heights, mod_heights)
 
-    # we just convert to integer without checking ...
-    year = int(year)
-    # comment: there was some reason why I commented that code again
-    # if not isinstance(year, int):
-    #    raise InvalidParamsError('Year has to be the full year for get_annual_mb,'
-    #                             'year needs to be an integer')
-    if year < 1979+spinup_yrs:
-        # most climatic data starts in 1979, so if we want to
-        # get the first 6 years can not use a spinup!!!
-        # (or would need to think about sth. else, but not so
-        # important right now!!!)
-        spinup = False
-    if year in pd_mb_annual.columns and check_availability:
-        # print('takes existing annual mb')
-        # if that year has already been computed, and we did not change any parameter settings
-        # just get the annual_mb without redoing all the computations
-        mb_annual = pd_mb_annual[year].values
-        if bucket_output:
-            raise Exception('if you want to output the buckets, you need to do'
-                                       'reset_pd_mb_bucket() and rerun')
+#     # we just convert to integer without checking ...
+#     year = int(year)
+#     # comment: there was some reason why I commented that code again
+#     # if not isinstance(year, int):
+#     #    raise InvalidParamsError('Year has to be the full year for get_annual_mb,'
+#     #                             'year needs to be an integer')
+#     if year < 1979+spinup_yrs:
+#         # most climatic data starts in 1979, so if we want to
+#         # get the first 6 years can not use a spinup!!!
+#         # (or would need to think about sth. else, but not so
+#         # important right now!!!)
+#         spinup = False
+#     if year in pd_mb_annual.columns and check_availability:
+#         # print('takes existing annual mb')
+#         # if that year has already been computed, and we did not change any parameter settings
+#         # just get the annual_mb without redoing all the computations
+#         mb_annual = pd_mb_annual[year].values
+#         if bucket_output:
+#             raise Exception('if you want to output the buckets, you need to do'
+#                                        'reset_pd_mb_bucket() and rerun')
 
-        if add_climate:
-            t, temp2dformelt, prcp, prcpsol = _get_2d_annual_climate(heights,
-                                                                          year) #=_get_climate(heights, 'annual', year=year)
-            return (mb_annual, t.mean(axis=1), temp2dformelt.sum(axis=1),
-                    prcp.sum(axis=1), prcpsol.sum(axis=1))
-            # raise NotImplementedError('TODO: add_climate has to be implemented!')
-        else:
-            return mb_annual
-    else:
-        # do we need to do the spinup beforehand
-        # if any of the default 6 spinup years before was not computed,
-        # we need to reset all and do the spinup properly -> (i.e. condi = True)
-        if melt_f_update == 'annual':
-            # so we really need to check if every year exists!!!
-            condis = []
-            for bef in np.arange(1, spinup_yrs, 1):
-                condis.append(int(year - bef) not in pd_mb_annual.columns)
-            condi = np.any(np.array(condis))
-        elif melt_f_update == 'monthly':
-            try:
-                # check if first and last month of each spinup years before exists
-                condis = []
-                for bef in np.arange(1, spinup_yrs, 1):
-                    condis.append(date_to_floatyear(year - bef, 1) not in pd_mb_monthly.columns)
-                    condis.append(date_to_floatyear(year - bef, 12) not in pd_mb_monthly.columns)
-                condi = np.any(np.array(condis))
-            except:
-                condi = True
+#         if add_climate:
+#             t, temp2dformelt, prcp, prcpsol = _get_2d_annual_climate(heights,
+#                                                                           year) #=_get_climate(heights, 'annual', year=year)
+#             return (mb_annual, t.mean(axis=1), temp2dformelt.sum(axis=1),
+#                     prcp.sum(axis=1), prcpsol.sum(axis=1))
+#             # raise NotImplementedError('TODO: add_climate has to be implemented!')
+#         else:
+#             return mb_annual
+#     else:
+#         # do we need to do the spinup beforehand
+#         # if any of the default 6 spinup years before was not computed,
+#         # we need to reset all and do the spinup properly -> (i.e. condi = True)
+#         if melt_f_update == 'annual':
+#             # so we really need to check if every year exists!!!
+#             condis = []
+#             for bef in np.arange(1, spinup_yrs, 1):
+#                 condis.append(int(year - bef) not in pd_mb_annual.columns)
+#             condi = np.any(np.array(condis))
+#         elif melt_f_update == 'monthly':
+#             try:
+#                 # check if first and last month of each spinup years before exists
+#                 condis = []
+#                 for bef in np.arange(1, spinup_yrs, 1):
+#                     condis.append(date_to_floatyear(year - bef, 1) not in pd_mb_monthly.columns)
+#                     condis.append(date_to_floatyear(year - bef, 12) not in pd_mb_monthly.columns)
+#                 condi = np.any(np.array(condis))
+#             except:
+#                 condi = True
 
-        if condi and spinup and auto_spinup:
-            # reset and do the spinup:
-            # comment: I think we should always reset when
-            # doing the spinup and not having computed year==2000
-            # problem: the years before year should not be saved up (in get_annual_mb)!
-            # (because they are not computed right!!! (they don't have a spinup)
-            reset_pd_mb_bucket()
-            for yr in np.arange(year-spinup_yrs, year):
-                get_annual_mb(heights, year=yr, unit=unit,
-                                   bucket_output=False,
-                                   spinup=False, add_climate=False,
-                                   auto_spinup=False,
-                                   **kwargs)
+#         if condi and spinup and auto_spinup:
+#             # reset and do the spinup:
+#             # comment: I think we should always reset when
+#             # doing the spinup and not having computed year==2000
+#             # problem: the years before year should not be saved up (in get_annual_mb)!
+#             # (because they are not computed right!!! (they don't have a spinup)
+#             #reset_pd_mb_bucket()
+#             pd_bucket = _pd_mb_template_bucket.copy()
+#             for yr in np.arange(year-spinup_yrs, year):
+#                 get_annual_mb(heights, year=yr, unit=unit,
+#                                    bucket_output=False,
+#                                    spinup=False, add_climate=False,
+#                                    auto_spinup=False,
+#                                    **kwargs)
 
-        if spinup:
-            # check if the spinup years had been computed (should be inside of pd_mb_annual)
-            # (it should have been computed automatically if auto_spinup=True)
-            for bef in np.arange(1, 6, 1):
-                if int(year-bef) not in pd_mb_annual.columns.values:
-                    raise Exception('need to do get_annual_mb of all spinup years'
-                                               '(default is 6) beforehand')
-        if melt_f_update == 'annual':
-            pd_bucket = _add_delta_mb_vary_melt_f(heights, year=year,
-                                                            climate_resol='annual')
-            mb_annual = ((pd_bucket['delta_kg/m2'].values
-                          - residual) / SEC_IN_YEAR / rho)
-            if bucket_output:
-                # copy because we want to output the bucket that is not yet updated!!!
-                pd_bucket = pd_bucket.copy()
-            # update to one year later ... (i.e. put the snow / firn into the next older bucket)
-            _update()
-            # save the annual mb
-            # todo Fabi exectime: --> would need to restructure code to remove pd stuff
-            pd_mb_annual[year] = mb_annual
-            # this is done already if melt_f_update is monthly (see get_monthly_mb for m == 12)
-        elif melt_f_update == 'monthly':
-            # will be summed up over each month by getting pd_mb_annual
-            # that is set in december (month=12)
-            for m in np.arange(1, 13, 1):
-                floatyear = date_to_floatyear(year, m)
-                out = get_monthly_mb(heights, year=floatyear, unit=unit,
-                                          bucket_output=bucket_output, spinup=spinup,
-                                          add_climate=add_climate,
-                                          auto_spinup=auto_spinup,
-                                          **kwargs)
-                if bucket_output and m == 12:
-                    pd_bucket = out[1]
-            # get mb_annual that is produced by
-            mb_annual = pd_mb_annual[year].values
-        if bucket_output:
-            return mb_annual, pd_bucket
-        else:
-            if add_climate:
-                t, temp2dformelt, prcp, prcpsol = _get_2d_annual_climate(heights,
-                                                                              year)
-                return (mb_annual, t.mean(axis=1), temp2dformelt.sum(axis=1),
-                        prcp.sum(axis=1), prcpsol.sum(axis=1))
-                #raise NotImplementedError('TODO: add_climate has to be implemented!')
-            else:
-                return mb_annual
+#         if spinup:
+#             # check if the spinup years had been computed (should be inside of pd_mb_annual)
+#             # (it should have been computed automatically if auto_spinup=True)
+#             for bef in np.arange(1, 6, 1):
+#                 if int(year-bef) not in pd_mb_annual.columns.values:
+#                     raise Exception('need to do get_annual_mb of all spinup years'
+#                                                '(default is 6) beforehand')
+#         elif melt_f_update == 'monthly':
+#             # will be summed up over each month by getting pd_mb_annual
+#             # that is set in december (month=12)
+#             for m in np.arange(1, 13, 1):
+#                 floatyear = date_to_floatyear(year, m)
+#                 out = get_monthly_mb(heights, year=floatyear, unit=unit,
+#                                           bucket_output=bucket_output, spinup=spinup,
+#                                           add_climate=add_climate,
+#                                           auto_spinup=auto_spinup,
+#                                           **kwargs)
+#                 if bucket_output and m == 12:
+#                     pd_bucket = out[1]
+#             # get mb_annual that is produced by
+#             mb_annual = pd_mb_annual[year].values
+#         if bucket_output:
+#             return mb_annual, pd_bucket
+#         else:
+#             if add_climate:
+#                 t, temp2dformelt, prcp, prcpsol = _get_2d_annual_climate(heights,
+#                                                                               year)
+#                 return (mb_annual, t.mean(axis=1), temp2dformelt.sum(axis=1),
+#                         prcp.sum(axis=1), prcpsol.sum(axis=1))
+#                 #raise NotImplementedError('TODO: add_climate has to be implemented!')
+#             else:
+#                 return mb_annual
 
         #todo
         # if add_climate:
@@ -379,30 +693,30 @@ def get_annual_mb(heights, year=None, unit='m_of_ice',
 #### this is adapted from a method from the class
 #   mbmod_daily_oneflowline.MultipleFlowlineMassBalance_TIModel 
 ####
-def get_specific_mb( heights=None, widths=None, fls=None,
-                    year=None, **kwargs):
+#def get_specific_mb( heights=None, widths=None, fls=None,
+#                    year=None, **kwargs):
 
-    """ computes specific mass-balance for each year in [kg /m2]"""
+#    """ computes specific mass-balance for each year in [kg /m2]"""
 
 #    if heights is not None or widths is not None:
 #        raise ValueError('`heights` and `widths` kwargs do not work with '
 #                         'MultipleFlowlineMassBalance!')
 
-    if fls is None:
-        fls = fls
+#    if fls is None:
+#        fls = fls
 
 # not sure what does this
 #    if len(np.atleast_1d(year)) > 1:
 #        out = [get_specific_mb(fls=fls, year=yr, **kwargs) for yr in year] # call a method inside the method???
 #        return np.asarray(out)
 
-    mbs = []
-    widths = []
+#    mbs = []
+#    widths = []
 
-    mb = get_annual_mb(fl.surface_h, year=year, fls=fls,
-                              fl_id=i, **kwargs)
-    mbs = np.append(mbs, mb * SEC_IN_YEAR * rho)
-    return np.average(mbs, weights=widths)
+#    mb = get_annual_mb(fl.surface_h, year=year, fls=fls,
+#                              fl_id=i, **kwargs)
+#    mbs = np.append(mbs, mb * SEC_IN_YEAR * rho)
+#    return np.average(mbs, weights=widths)
 
 ##### This is what I want at the end:
 #get_specific_mb(heights=h, widths=w, year=years).mean()

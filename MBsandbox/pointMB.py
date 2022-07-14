@@ -436,7 +436,6 @@ def _get_climate(heights, climate_type, year=None):
         grad_temp *= (heights.repeat(len(pok)).reshape(grad_temp.shape) -
                       ref_hgt)
         temp2d = np.atleast_2d(itemp).repeat(npix, 0) + grad_temp
-        print(itemp)
         # temp_for_melt is computed separately depending on mb_type
         # todo: exectime the line code below is quite expensive in TIModel
         temp2dformelt = _get_tempformelt(temp2d, pok)

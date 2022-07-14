@@ -423,7 +423,6 @@ def _get_climate(heights, climate_type, year=None):
         grad_temp *= (heights.repeat(len(pok)).reshape(grad_temp.shape) -
                       ref_hgt)
         temp2d = np.atleast_2d(itemp).repeat(npix, 0) + grad_temp
-        print(itemp)
         # temp_for_melt is computed separately depending on mb_type
         # todo: exectime the line code below is quite expensive in TIModel
         temp2dformelt = _get_tempformelt(temp2d, pok)
@@ -518,17 +517,48 @@ def _get_2d_annual_climate(heights, year):
 ##########################################################################
 obs_melt = 800 #mm.w.e.
 density = 0.85 #850 kg/m3
-years = np.linspace(2011, 2019, 12*(2018-2011 +1)+1)
+melt_f = 120
+yearss = np.linspace(2011, 2018.91666667, 12*(2018-2011 +1))
 smb = []
+smb_year = []
 
-for yr in years:
-    smb.append(float(get_monthly_mb(heights=3400, year=yr)))
+import matplotlib.pyplot as plt
+#for melt_f in np.linspace(50,200,15):
+for yr in yearss:
+    smb.append(float(get_monthly_mb(heights=3500, year=yr)))
+    if round(yr,6)%1 == 0.0 :
+        print(yr)
+        smb_year.append(sum(np.array(smb)) * SEC_IN_MONTH * density)
+        #print(sum(np.array(smb)) * SEC_IN_MONTH * density)
+        #print(smb_year)
+        smb = []
         
-totalsmb = sum(smb)
+plt.plot(np.linspace(0, 7,8)+2011, smb_year)
+plt.xlabel("hidro? year")
+plt.ylabel("specific (mwe)")
+plt.legend()
+plt.title(f'MB for melt factor = {melt_f}')
+plt.show()
+print(melt_f)
+print(sum(smb))
+smb = []
+smb_year.append(sum(smb))
+year_totalsmb = np.array(smb_year) * SEC_IN_MONTH * density
+
+
+
+totalsmb = np.array(smb)
 totalsmb = totalsmb * SEC_IN_MONTH * density
 
-print(totalsmb) # in m.w.e 
+year_totalsmb = np.array(smb_year) * SEC_IN_MONTH * density
 
+# in m.w.e 
+plt.plot(year_totalsmb)
+plt.xlabel("time in months")
+plt.ylabel("specific (mwe)")
+plt.legend()
+plt.title(f'MB for melt factor = {melt_f}')
+plt.show()
 # i have to add a m_factor to the get_monthly_mb() to test basic things
     
 

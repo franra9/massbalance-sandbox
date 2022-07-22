@@ -518,22 +518,20 @@ def _get_2d_annual_climate(heights, year):
 obs_melt = 800 #mm.w.e.
 density = 0.85 #850 kg/m3
 melt_f = 120
-yearss = np.linspace(2011, 2019, 12*(2018-2011 +1)+1)
+yearss = np.linspace(2011, 2020, 12*(2019-2011 +1)+1) #float natural years
 smb = []
 smb_year = []
 
 import matplotlib.pyplot as plt
 #for melt_f in np.linspace(50,200,15):
 for yr in yearss:
-    smb.append(float(get_monthly_mb(heights=3400, year=yr)))
-    if round(yr,6)%1 == 0.0 :
+    smb.append(float(get_monthly_mb(heights=3450, year=yr)))
+    if round(yr,6)%1 == 0.0 and yr!=2011:
         print(yr)
         smb_year.append(sum(np.array(smb)) * SEC_IN_MONTH * density)
-        #print(sum(np.array(smb)) * SEC_IN_MONTH * density)
-        #print(smb_year)
         smb = []
         
-plt.bar(np.linspace(0, 8,9)+2010, smb_year)
+plt.bar(np.linspace(1, 9,9)+2010, smb_year)
 plt.xlabel("hidro? year")
 plt.ylabel("specific (mwe)")
 plt.legend()

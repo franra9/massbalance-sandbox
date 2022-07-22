@@ -407,7 +407,6 @@ def _get_climate(heights, climate_type, year=None):
     -------
     (temp, tempformelt, prcp, prcpsol)
     """
-
     y, m = floatyear_to_date(year)
     if y < ys or y > ye:
         raise ValueError('year {} out of the valid time bounds: '

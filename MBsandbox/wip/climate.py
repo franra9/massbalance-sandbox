@@ -9,23 +9,37 @@ import numpy as np
 import pandas as pd
 import pointMB
 
-years = np.linspace(2010, 2015, (2015-2010) * 12 + 1) 
+years = np.round(np.linspace(2010, 2015, (2015-2010) * 12 + 1), 2)
 
-column_names = ["temp", "temp4melt", "prcp", "prcpsol"]
+######## get climate ########
+def get_climate(years, altitude):
+    """
+    gets daily data from the float years in 'year', organized monthly.
 
-df = pd.DataFrame(columns = column_names, index=years)
+    Parameters
+    ----------
+    year : np array
+        float, natural years of the period I want the climate
+    
+    altitude : int
+        altitude m.a.s.l. where to get the climate
+        
+
+    Returns
+    -------
+    pd dataframe: 2m? temperature at my altitude, temperature4melt, t
+    otal? precipitation, solid precipitation per day, grouped by month.
+
+    """
+    
+    column_names = ["temp", "temp4melt", "prcp", "prcpsol"]
+
+    clim = pd.DataFrame(columns = column_names, index=years)
 
 # Test model for the priod 2010-2015  # years are in normal years, not hydro.
-year=np.array([2010.]) 
-temp0, tempformelt,prcp,prcsol = pointMB._get_climate(3000, climate_type = 'monthly', year=year)
+    for yr in years:
+        clim.temp[yr], clim.temp4melt[yr], clim.prcp[yr], clim.prcpsol[yr] = \
+            pointMB._get_climate(altitude, climate_type = 'monthly', year=yr)
+    return clim
 
-year=np.array([2011.0])
-temp1, tempformelt,prcp,prcsol = pointMB._get_climate(3000, climate_type = 'monthly', year=year)
-
-year=np.array([2011.09])
-temp2, tempformelt,prcp,prcsol = pointMB._get_climate(3000, climate_type = 'monthly', year=year)
-
-year=np.array([2011.18])
-temp3, tempformelt,prcp,prcsol = pointMB._get_climate(3000, climate_type = 'monthly', year=year)
-
-df.temp[2010] = temp0
+# clim is the climate in the 5 year test period

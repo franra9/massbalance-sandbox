@@ -17,6 +17,7 @@ def monthly_mb(climate, melt_f):
         t, temp2dformelt, prcp, prcpsol
     bucket : pandas dataframe
         accounts for the surface type
+    altitude : altitude where to find the variables
     
     Returns
     -------
@@ -361,7 +362,7 @@ for iyr in np.arange(0, len(years)):
 from climate import get_climate
 
 
-def omnibus_minimize_mf(melt_f, altitude=3000):
+def omnibus_minimize_mf(melt_f, altitude=altitude, obs_mb=obs_mb):
     """
     This function is used to run amd minimize the melt factor to calibrate the sfc_mb model
     
@@ -392,11 +393,12 @@ def omnibus_minimize_mf(melt_f, altitude=3000):
     years = np.round(np.linspace(2010, 2015, (2015-2010) * 12 + 1), 2) + 0.01 #add 0.01 to make sure there are not rounding errors
     #altitude = 3000
     print(altitude)
+    print(obs_mb)
 
     cl = get_climate(years, altitude)
     mb = 0
 
-    obs_mb = -10000 #mmweq
+    obs_mb = obs_mb #mmweq
 
     # apply monthly_mb_sd #
     # get climate

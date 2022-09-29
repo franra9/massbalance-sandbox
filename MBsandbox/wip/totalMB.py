@@ -409,6 +409,8 @@ def omnibus_minimize_mf(melt_f, altitude=altitude, obs_mb=obs_mb):
     total_sum = []
     summ_mb = 0
     for iyr in np.arange(0, len(years)):
+        ## altitude change
+        # if summ_mb : altitude = altitude - mbbbbb (...)
         pd_bucket = monthly_mb_sd(cl.iloc[iyr], pd_bucket)[1]
         mb = monthly_mb_sd(cl.iloc[iyr], pd_bucket)[0]
         total_m.append(mb)

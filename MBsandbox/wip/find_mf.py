@@ -55,7 +55,7 @@ plt.legend()
 plt.show()
 
 # https://matplotlib.org/stable/gallery/color/colorbar_basics.html
-fig, ax1 = plt.subplots(figsize=(20, 3), ncols=1)
+fig, ax1 = plt.subplots(figsize=(13, 3), ncols=1)
 # plot just the positive data and save the
 # color "mappable" object returned by ax1.imshow
 pos = ax1.imshow(in_data[2], vmin=min(in_data[2].values.flatten()[in_data[2].values.flatten()>0]-10), vmax=max(in_data[2].values.flatten()))

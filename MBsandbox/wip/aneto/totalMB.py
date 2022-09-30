@@ -392,8 +392,6 @@ def omnibus_minimize_mf(melt_f, altitude=altitude, obs_mb=obs_mb):
     #initial values for climate # hardcoded for testing reasons
     years = np.round(np.linspace(2010, 2015, (2015-2010) * 12 + 1), 2) + 0.01 #add 0.01 to make sure there are not rounding errors
     #altitude = 3000
-    print(altitude)
-    print(obs_mb)
 
     cl = get_climate(years, altitude)
     mb = 0
@@ -415,7 +413,8 @@ def omnibus_minimize_mf(melt_f, altitude=altitude, obs_mb=obs_mb):
         mb = monthly_mb_sd(cl.iloc[iyr], pd_bucket)[0]
         total_m.append(mb)
         summ_mb = summ_mb + mb
-    
+    print(summ_mb - obs_mb)
+    print(melt_f)
     return abs(summ_mb - obs_mb)
 #    return summ_mb
 

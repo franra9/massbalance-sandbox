@@ -8,8 +8,14 @@ This script loads some climate that I can use for my purposes.
 import numpy as np
 import pandas as pd
 import pointMB
+#import aneto_projections_bayescalibration
 
-years = np.round(np.linspace(2010, 2015, (2015-2010) * 12 + 1), 2)
+# calibration
+#years = np.round(np.linspace(2011, 2019, (2019-2011) * 12 + 1), 2)
+
+# prediction
+years = np.round(np.linspace(2011, 2013, (2013-2011) * 12 + 1), 2)
+
 
 ######## get climate ########
 def get_climate(years, altitude):
@@ -36,10 +42,10 @@ def get_climate(years, altitude):
 
     clim = pd.DataFrame(columns = column_names, index=years)
 
-# Test model for the priod 2010-2015  # years are in normal years, not hydro.
+# Test model for the priod 2011-2019  # years are in normal years, not hydro.
     for yr in years:
         clim.temp[yr], clim.temp4melt[yr], clim.prcp[yr], clim.prcpsol[yr] = \
             pointMB._get_climate(altitude, climate_type = 'monthly', year=yr)
     return clim
 
-# clim is the climate in the 5 year test period
+# clim is the climate in the 8 year test period

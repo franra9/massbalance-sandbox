@@ -9,14 +9,14 @@ import numpy as np
 from get_data_over_glacier import get_raster_data
 import matplotlib.pyplot as plt
 
-altitude = 3200  
+#altitude = 3200  
 
-res = minimize_scalar(omnibus_minimize_mf)
-print(f'{int(res.x)} is the melt factor that minimizes abs(observed_mb-modelled_mb)')
+#res = minimize_scalar(omnibus_minimize_mf)
+#print(f'{int(res.x)} is the melt factor that minimizes abs(observed_mb-modelled_mb)')
 
-result = []
-for melt_f in np.arange(10,150,20):
-    result.append(omnibus_minimize_mf(melt_f))
+#result = []
+#for melt_f in np.arange(10,150,20):
+#    result.append(omnibus_minimize_mf(melt_f))
 
 # TODO: do a minimiation keeping altitude cnstant and only haing melt_f as a variable
 #omnibus_minimize_mf(melt_f, altitude)
@@ -28,19 +28,29 @@ g_ind = np.where(in_data[4].values.flatten()>0) #points onto glacier
 
 #altitude2011 = bed topo + thichness 2020 + thick diff
 
+import time
 
+now=time.time()
+import warnings
+warnings.filterwarnings("ignore")
 # loop over each point
 m_f = []
 for i in g_ind[0]:
     
-    altitide = in_data[4].values.flatten()[i] + in_data[3].values.flatten()[i] + \
+    print(f'{np.where(g_ind[0]==i)} out of {len(g_ind[0])} points')
+    altitude = in_data[4].values.flatten()[i] + in_data[3].values.flatten()[i] + \
             in_data[1].values.flatten()[i]
     obs_mb = in_data[1].values.flatten()[i]
     
     obs_mb = obs_mb * 1000 #(in mm)
 
-    res = minimize_scalar(omnibus_minimize_mf, args=(altitude, obs_mb)) # check mm and mmwe in side omnibus function
+    res = minimize_scalar(omnibus_minimize_mf, args=(altitude, obs_mb), tol=0.001) # check mm and mmwe in side omnibus function
     m_f.append(res.x)
+    print(f'Point altitude is: {altitude} and its melt factor: {res.x}')
+    now1=time.time()
+    print(abs(now-now1))
+    
+now1=time.time()
 
 dum = np.zeros(100)
 dum[g_ind] = m_f
@@ -63,5 +73,5 @@ pos = ax1.imshow(in_data[2], vmin=min(in_data[2].values.flatten()[in_data[2].val
 # add the colorbar using the figure's method,
 # telling which mappable we're talking about and
 # which axes object it should be near
-ax1.set_title('melt_factor, 2011-2020')
+ax1.set_title('melt_factor, 2011-2019')
 fig.colorbar(pos, ax=ax1)

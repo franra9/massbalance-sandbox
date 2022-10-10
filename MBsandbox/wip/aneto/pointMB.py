@@ -5,6 +5,10 @@ piont mass balance deconstruction. First I build this and then I will create a c
 main script. Start with the code from 
 "../docs/aneto_test/use_your_inventory.ipynb"
 """
+# import parameters
+from params import *
+import params as params
+
 #  import stuff
 import numpy as np
 import pandas as pd
@@ -17,13 +21,11 @@ from oggm import utils
 from oggm.utils import (floatyear_to_date, clip_array, clip_min)
 import geopandas as gpd
 
-cgidf = gpd.read_file(utils.get_demo_file('cgi2.shp'))
-cgidf
 
 cgidf_a = gpd.read_file('/home/francesc/data/aneto_glacier/Contornos/Aneto2011.shp')
 
 rgidf_simple_a = utils.cook_rgidf(cgidf_a, ids=[int('3208')], o1_region='11', o2_region='02', bgndate='2011') #id_suffix aneto glacier
-rgidf_simple_a
+#rgidf_simple_a
 
 from oggm import cfg, workflow
 
@@ -70,18 +72,74 @@ gdir
 
 temporal_resol = 'daily'
 baseline_climate = 'W5E5'
-#baseline_climate = 'ISIMIP3B'
+baseline_climate = 'ISIMIP3B'
+baseline_climate = 'WFDE5_CRU'
+baseline_climate = 'WFDE5_CRU'
+
 
 from MBsandbox.mbmod_daily_oneflowline import process_w5e5_data
-from projections_bayescalibration import process_isimip_data
-
+#from projections_bayescalibration import process_isimip_data
+from MBsandbox.wip.projections_bayescalibration import process_isimip_data
 
 # 2011-2019
-#process_w5e5_data(gdir, temporal_resol=temporal_resol,
-#                  climate_type=baseline_climate) #Processes and writes the WFDE5_CRU & W5E5 daily baseline climate data for a glacier.
+if cal == 'w5e5': 
+    process_w5e5_data(gdir, temporal_resol=temporal_resol,
+                      climate_type=baseline_climate) #Processes and writes the WFDE5_CRU & W5E5 daily baseline climate data for a glacier.
 
 # 2020 --> 20xx
-process_isimip_data(gdir, temporal_resol=temporal_resol, climate_historical_filesuffix='_daily_WFDE5_CRU') #Processes and writes the WFDE5_CRU & W5E5 daily baseline climate data for a glacier.
+if cal == 'isimip3b':
+    process_w5e5_data(gdir, temporal_resol=temporal_resol,
+                      climate_type=baseline_climate) #Processes and writes the WFDE5_CRU & W5E5 daily baseline climate data for a glacier.
+
+    ssp = params.ssp
+    process_isimip_data(gdir,
+                        temporal_resol=temporal_resol,
+                        climate_historical_filesuffix='_daily_WFDE5_CRU',
+                        #Processes and writes the WFDE5_CRU & W5E5 daily baseline climate data for a glacier.
+                        #climate_historical_filesuffix = '',
+                        ensemble = 'mri-esm2-0_r1i1p1f1',
+                        # from temperature tie series the "median" ensemble
+                        ssp = ssp, flat = True,
+                        cluster = False,
+                        year_range = ('2005', '2050'),
+                        correct = False)
+
+# 245 file does not exist!
+#process_isimip_data(gdir,
+#                    temporal_resol=temporal_resol,
+#                    climate_historical_filesuffix='_daily_WFDE5_CRU',
+#                    #Processes and writes the WFDE5_CRU & W5E5 daily baseline climate data for a glacier.
+#                    #climate_historical_filesuffix = '',
+#                    ensemble = 'mri-esm2-0_r1i1p1f1',
+#                    # from temperature tie series the "median" ensemble
+#                    ssp = 'ssp245', flat = True,
+#                    cluster = False,
+#                    year_range = ('2005', '2050'),
+#                    correct = False)
+
+#process_isimip_data(gdir,
+#                    temporal_resol=temporal_resol,
+#                    climate_historical_filesuffix='_daily_WFDE5_CRU',
+#                    #Processes and writes the WFDE5_CRU & W5E5 daily baseline climate data for a glacier.
+#                    #climate_historical_filesuffix = '',
+#                    ensemble = 'mri-esm2-0_r1i1p1f1',
+#                    # from temperature tie series the "median" ensemble
+#                    ssp = 'ssp370', flat = True,
+#                    cluster = False,
+#                    year_range = ('2005', '2050'),
+#                    correct = False)
+
+#process_isimip_data(gdir,
+#                    temporal_resol=temporal_resol,
+#                    climate_historical_filesuffix='_daily_WFDE5_CRU',
+#                    #Processes and writes the WFDE5_CRU & W5E5 daily baseline climate data for a glacier.
+#                    #climate_historical_filesuffix = '',
+#                    ensemble = 'mri-esm2-0_r1i1p1f1',
+#                    # from temperature tie series the "median" ensemble
+#                    ssp = 'ssp585', flat = True,
+#                    cluster = False,
+#                    year_range = ('2005', '2050'),
+#                    correct = False)
 
 # MB model options: 
 # we just use the most complicated ones: 
@@ -160,12 +218,11 @@ pd_bucket = _pd_mb_template_bucket.copy()
 # (6*12 or 6 buckets depending if melt_f_update is monthly or annual)
 pd_bucket = pd_bucket
 
-mb_geodetic = np.array(-800) # from zaragoza people 2011-2020
-
-years = np.arange(2011-6, 2040, 1)
-ys=2011-6
+#years = np.arange(2011-6, 2020, 1)
+#years = np.arange(2011-6, 2020, 1)
+ys = params.y_alfa #2011
+ye = params.y_omega #2020
 #ye=2020
-ye=2040
 #mb_specific = mb_mod_monthly_0_5_m.get_specific_mb(heights=h,
 #                                        widths=w,
 #                                        year=years
@@ -189,13 +246,16 @@ t_melt = 0.
 t_solid = 0
 t_liq = 2
 
-rho=800
+#rho=800
 
-input_filesuffix = '_daily_{}'.format(baseline_climate)
-filename = 'climate_historical'
 
-fpath = gdir.get_filepath(filename, filesuffix=input_filesuffix)
+if cal == 'w5e5':
+    input_filesuffix = '_daily_{}'.format(baseline_climate)
+    filename = 'climate_historical'
+    fpath = gdir.get_filepath(filename, filesuffix=input_filesuffix)
 
+if cal == 'isimip3b':
+    fpath = f"/tmp/OGGM/OGGM-sfc-type/per_glacier/RGI60-11/RGI60-11.03/RGI60-11.03208/gcm_data_daily_ISIMIP3b_mri-esm2-0_r1i1p1f1_{ssp}_no_correction.nc"
 
 #xr.open_dataset(fpath) as xr_nc
 with xr.open_dataset(fpath) as xr_nc:
@@ -212,12 +272,6 @@ with xr.open_dataset(fpath) as xr_nc:
     # as chosen from the gdir climate file
     hydro_month_start = int(xr_nc.time[0].dt.month.values)
     # if we actually use TIModel_Sfc_Type -> hydro_month has to be 1
-### not sure
-#    if type(self) == TIModel_Sfc_Type:
-#        if hydro_month_start != 1 or cfg.PARAMS[f'hydro_month_{self.hemisphere}'] != 1:
-#            raise InvalidWorkflowError('TIModel_Sfc_Type works only with calendar years, set '
-#                                       'cfg.PARAMS["hydro_month_nh"] (or sh)'
-#                                       ' to 1 and process the climate data again')
 
     if mb_type == 'mb_real_daily':
         # use pandas to convert month/year to hydro_years
@@ -253,7 +307,7 @@ with xr.open_dataset(fpath) as xr_nc:
     # this is prcp computed by instantiation
     # this changes if prcp_fac is updated (see @property)
     prcp = xr_nc['prcp'].values.astype(np.float64) * _prcp_fac
-
+    print (years)
     # lapse rate (temperature gradient)
     if grad_type == 'var' or grad_type == 'var_an_cycle':
         try:
@@ -448,57 +502,57 @@ def _get_2d_monthly_climate(heights, year=None): # this is the same as _get clim
 
 ########
 # from # class TIModel(TIModel_Parent):
-def get_monthly_mb(heights, year=None, add_climate=False,
-                   **kwargs):
-    """ computes annual mass balance in m of ice per second!
-    Attention year is here in hydro float year
-    year has to be given as float hydro year from what the month is taken,
-    hence year 2000 -> y=2000, m = 1, & year = 2000.09, y=2000, m=2 ...
-    which corresponds to the real year 1999 and months October or November
-    if hydro year starts in October
-    """
-    # todo: can actually remove **kwargs???
-    # comment: get_monthly_mb and get_annual_mb are only different
-    #  to OGGM default for mb_real_daily
-
-    if mb_type == 'mb_real_daily':
-        # get 2D values, dependencies on height and time (days)
-        out = _get_2d_monthly_climate(heights, year)
-        t, temp2dformelt, prcp, prcpsol = out
-        # (days per month)
-        # dom = 365.25/12  # len(prcpsol.T)
-        fact = 12/365.25
-        # attention, I should not use the days of years as the melt_f is
-        # per month ~mean days of that year 12/daysofyear
-        # to have the same unit of melt_f, which is
-        # the monthly temperature sensitivity (kg /m² /mth /K),
-        mb_daily = prcpsol - melt_f * temp2dformelt * fact
-
-        mb_month = np.sum(mb_daily, axis=1)
-        # more correct than using a mean value for days in a month
-        #warnings.warn('there might be a problem with SEC_IN_MONTH'
-        #              'as February changes amount of days inbetween the years'
-        #              ' see test_monthly_glacier_massbalance()')
-
-    # residual is in mm w.e per year, so SEC_IN_MONTH ... but mb_month
-    # should be per month!
-    mb_month -= residual * SEC_IN_MONTH / SEC_IN_YEAR
-    # this is for mb_pseudo_daily otherwise it gives the wrong shape
-    mb_month = mb_month.flatten()
-    # if add_climate: #default is False
-        # if self.mb_type == 'mb_real_daily':
-        #     # for run_with_hydro want to get monthly output (sum of daily),
-        #     # if we want daily output in run_with_hydro need to directly use get_daily_mb()
-        #     prcp = prcp.sum(axis=1)
-        #     prcpsol = prcpsol.sum(axis=1)
-        #     t = t.mean(axis=1)
-        #     temp2dformelt = temp2dformelt.sum(axis=1)
-        # if self.mb_type == 'mb_pseudo_daily':
-        #     temp2dformelt = temp2dformelt.flatten()
-        # return (mb_month / SEC_IN_MONTH / self.rho, t, temp2dformelt,
-        #         prcp, prcpsol)
-    # instead of SEC_IN_MONTH, use instead len(prcpsol.T)==daysinmonth
-    return mb_month / SEC_IN_MONTH / rho
+#def get_monthly_mb(heights, year=None, add_climate=False,
+#                   **kwargs):
+#    """ computes annual mass balance in m of ice per second!
+#    Attention year is here in hydro float year
+#    year has to be given as float hydro year from what the month is taken,
+#    hence year 2000 -> y=2000, m = 1, & year = 2000.09, y=2000, m=2 ...
+#    which corresponds to the real year 1999 and months October or November
+#    if hydro year starts in October
+#    """
+#    # todo: can actually remove **kwargs???
+#    # comment: get_monthly_mb and get_annual_mb are only different
+#    #  to OGGM default for mb_real_daily
+#
+#    if mb_type == 'mb_real_daily':
+#        # get 2D values, dependencies on height and time (days)
+#        out = _get_2d_monthly_climate(heights, year)
+#        t, temp2dformelt, prcp, prcpsol = out
+#        # (days per month)
+#        # dom = 365.25/12  # len(prcpsol.T)
+#        fact = 12/365.25
+#        # attention, I should not use the days of years as the melt_f is
+#        # per month ~mean days of that year 12/daysofyear
+#        # to have the same unit of melt_f, which is
+#        # the monthly temperature sensitivity (kg /m² /mth /K),
+#        mb_daily = prcpsol - melt_f * temp2dformelt * fact
+#
+#        mb_month = np.sum(mb_daily, axis=1)
+#        # more correct than using a mean value for days in a month
+#        #warnings.warn('there might be a problem with SEC_IN_MONTH'
+#        #              'as February changes amount of days inbetween the years'
+#        #              ' see test_monthly_glacier_massbalance()')
+#
+#    # residual is in mm w.e per year, so SEC_IN_MONTH ... but mb_month
+#    # should be per month!
+#    mb_month -= residual * SEC_IN_MONTH / SEC_IN_YEAR
+#    # this is for mb_pseudo_daily otherwise it gives the wrong shape
+#    mb_month = mb_month.flatten()
+#    # if add_climate: #default is False
+#        # if self.mb_type == 'mb_real_daily':
+#        #     # for run_with_hydro want to get monthly output (sum of daily),
+#        #     # if we want daily output in run_with_hydro need to directly use get_daily_mb()
+#        #     prcp = prcp.sum(axis=1)
+#        #     prcpsol = prcpsol.sum(axis=1)
+#        #     t = t.mean(axis=1)
+#        #     temp2dformelt = temp2dformelt.sum(axis=1)
+#        # if self.mb_type == 'mb_pseudo_daily':
+#        #     temp2dformelt = temp2dformelt.flatten()
+#        # return (mb_month / SEC_IN_MONTH / self.rho, t, temp2dformelt,
+#        #         prcp, prcpsol)
+#    # instead of SEC_IN_MONTH, use instead len(prcpsol.T)==daysinmonth
+#    return mb_month / SEC_IN_MONTH / rho
 
 #######
 def _get_2d_annual_climate(heights, year):

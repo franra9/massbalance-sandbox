@@ -5,7 +5,6 @@ Created on Wed Jul 13 17:45:17 2022
 This script loads some climate that I can use for my purposes.
 @author: francesc
 """
-import numpy as np
 import pandas as pd
 import pointMB
 #import aneto_projections_bayescalibration
@@ -14,7 +13,7 @@ import pointMB
 #years = np.round(np.linspace(2011, 2019, (2019-2011) * 12 + 1), 2)
 
 # prediction
-years = np.round(np.linspace(2011, 2013, (2013-2011) * 12 + 1), 2)
+#years = np.round(np.linspace(2011, 2013, (2013-2011) * 12 + 1), 2)
 
 
 ######## get climate ########
@@ -47,5 +46,3 @@ def get_climate(years, altitude):
         clim.temp[yr], clim.temp4melt[yr], clim.prcp[yr], clim.prcpsol[yr] = \
             pointMB._get_climate(altitude, climate_type = 'monthly', year=yr)
     return clim
-
-# clim is the climate in the 8 year test period

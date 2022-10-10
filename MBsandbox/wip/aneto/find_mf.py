@@ -3,37 +3,26 @@
 """
 Calling functions from totalMB. To get a minimized MF
 """
-from totalMB import (omnibus_minimize_mf, melt_f_update1)
+from params import *
+import params as params
+from totalMB import (omnibus_minimize_mf)
 from scipy.optimize import minimize_scalar
 import numpy as np
 from get_data_over_glacier import get_raster_data
 import matplotlib.pyplot as plt
-
-#altitude = 3200  
-
-#res = minimize_scalar(omnibus_minimize_mf)
-#print(f'{int(res.x)} is the melt factor that minimizes abs(observed_mb-modelled_mb)')
-
-#result = []
-#for melt_f in np.arange(10,150,20):
-#    result.append(omnibus_minimize_mf(melt_f))
-
-# TODO: do a minimiation keeping altitude cnstant and only haing melt_f as a variable
-#omnibus_minimize_mf(melt_f, altitude)
-
-#scipy.optimize.minimize(omnibus_minimize_mf(..., altitude=1000))
-
-in_data = get_raster_data()
-g_ind = np.where(in_data[4].values.flatten()>0) #points onto glacier
-
-#altitude2011 = bed topo + thichness 2020 + thick diff
-
 import time
+import warnings
+
+# get data from rasters
+n = params.n
+
+in_data = get_raster_data(n)
+g_ind = np.where(in_data[4].values.flatten() > 0) #points onto glacier
 
 now=time.time()
-import warnings
 warnings.filterwarnings("ignore")
-# loop over each point
+
+# loop over each point over the glacier
 m_f = []
 for i in g_ind[0]:
     
@@ -42,28 +31,25 @@ for i in g_ind[0]:
             in_data[1].values.flatten()[i]
     obs_mb = in_data[1].values.flatten()[i]
     
-    obs_mb = obs_mb * 1000 #(in mm)
+    obs_mb = obs_mb * 1000 # (in mm)
+    obs_mb = obs_mb * rho
 
-    res = minimize_scalar(omnibus_minimize_mf, args=(altitude, obs_mb), tol=0.001) # check mm and mmwe in side omnibus function
+    res = minimize_scalar(omnibus_minimize_mf, args=(altitude, obs_mb, years), tol=0.01) # check mm and mmwe in side omnibus function
     m_f.append(res.x)
     print(f'Point altitude is: {altitude} and its melt factor: {res.x}')
-    now1=time.time()
-    print(abs(now-now1))
-    
-now1=time.time()
 
-dum = np.zeros(100)
+now1=time.time()
+print(f'Time minimizing is: {abs(now - now1)}')
+
+# grid size
+dum = np.zeros(n * n)
 dum[g_ind] = m_f
-dum_resh = np.reshape(dum, [10,10])
+dum_resh = np.reshape(dum, [n, n])
 
 # fill melt_f in in_data list
-in_data[2].values=dum_resh
+in_data[2].values = dum_resh
 
 # plot
-plt.imshow(in_data[2])
-plt.legend()
-plt.show()
-
 # https://matplotlib.org/stable/gallery/color/colorbar_basics.html
 fig, ax1 = plt.subplots(figsize=(13, 3), ncols=1)
 # plot just the positive data and save the
@@ -73,5 +59,12 @@ pos = ax1.imshow(in_data[2], vmin=min(in_data[2].values.flatten()[in_data[2].val
 # add the colorbar using the figure's method,
 # telling which mappable we're talking about and
 # which axes object it should be near
-ax1.set_title('melt_factor, 2011-2019')
+ax1.set_title(f'{y_alfa}-{y_omega}_{n}x{n}_{cal}_{ssp}')
 fig.colorbar(pos, ax=ax1)
+fig.show()  
+plt.savefig(f'{out_path}/{y_alfa}-{y_omega}_{n}x{n}_{cal}_{ssp}_melt_f_0')
+plt.show()
+
+aaa = in_data[2]
+
+aaa.to_netcdf(f'{out_path}/{y_alfa}-{y_omega}_{n}x{n}_{cal}_{ssp}_melt_f_0.nc')

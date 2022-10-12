@@ -222,6 +222,9 @@ pd_bucket = pd_bucket
 #years = np.arange(2011-6, 2020, 1)
 ys = params.y_alfa #2011
 ye = params.y_omega #2020
+
+ys = params.y_ini #2011
+ye = params.y_fin #2020
 #ye=2020
 #mb_specific = mb_mod_monthly_0_5_m.get_specific_mb(heights=h,
 #                                        widths=w,

@@ -32,7 +32,7 @@ for i in g_ind[0]:
     obs_mb = in_data[1].values.flatten()[i]
     
     obs_mb = obs_mb * 1000 # (in mm)
-    obs_mb = obs_mb * rho
+    obs_mb = obs_mb * rho # in mmwe
 
     res = minimize_scalar(omnibus_minimize_mf, args=(altitude, obs_mb, years), tol=0.01) # check mm and mmwe in side omnibus function
     m_f.append(res.x)
@@ -68,3 +68,4 @@ plt.show()
 aaa = in_data[2]
 
 aaa.to_netcdf(f'{out_path}/{y_alfa}-{y_omega}_{n}x{n}_{cal}_{ssp}_melt_f_0.nc')
+

@@ -8,18 +8,23 @@ Created on Mon Oct 10 14:18:00 2022
 import numpy as np
 
 # calibration period: 2011-2019 (w5e5)
-y_alfa = 2011
-y_omega = 2020
+
 #cal = 'w5e5'
 cal = 'isimip3b'
 
 #'ssp126' #'ssp126' #"ssp245" does not exist!
 ssp = 'ssp126' 
-ssp = 'ssp370' 
-ssp = 'ssp585'
+#ssp = 'ssp370' 
+#ssp = 'ssp585'
 
 if cal == 'w5e5': # do some assertion here
     ssp = ''
+    y_alfa = 2011
+    y_omega = 2019
+
+if cal == 'isimip3b': # do some assertion here
+    y_alfa = 2011
+    y_omega = 2020
     
 if cal == 'w5e5' and y_omega > 2019:
     Exception('w5e5 calibration out of bonds')
@@ -30,4 +35,11 @@ rho = 0.85 # 850kg/m3
 # Out path
 out_path = "/home/francesc/results/aneto/"
 #resolution: n * n cells
-n = 5
+n = 20
+
+# future
+y_ini = 2020
+y_fin = 2070
+
+#fcst years
+years_fcst = np.round(np.linspace(y_ini, y_fin, (y_fin - y_ini) * 12 + 1), 2) + 0.68 #0.67 stands for october

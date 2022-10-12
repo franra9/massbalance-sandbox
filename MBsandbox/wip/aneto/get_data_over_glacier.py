@@ -27,7 +27,7 @@ def get_raster_data(n):
     # mother path:
     data_path = '/home/francesc/data/aneto_glacier/'
     
-    # data path: subglac_altimetry: ##### PROBLEM HERE!!!!
+    # data path: subglac_altimetry
     dpth_alti = os.path.join(data_path, 'TopografiaSubglaciar/TopoSubglaciar.tif')            
     
     # data path: thickness change 2011-2020

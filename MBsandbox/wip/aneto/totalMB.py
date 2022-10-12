@@ -50,8 +50,8 @@ def monthly_mb_sd(climate, pd_bucket):
     
     Returns
     -------
-    monthly mass balance
-
+    accum - melt (mb, in mmwe(?)), pd_bucket
+    
     """  
     # get 2D values, dependencies on height and time (days)
     t, temp4melt, prcp, prcpsol = climate.values

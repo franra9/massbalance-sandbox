@@ -7,6 +7,7 @@ This script loads some climate that I can use for my purposes.
 """
 import pandas as pd
 import pointMB
+import numpy as np
 #import aneto_projections_bayescalibration
 
 # calibration
@@ -46,3 +47,40 @@ def get_climate(years, altitude):
         clim.temp[yr], clim.temp4melt[yr], clim.prcp[yr], clim.prcpsol[yr] = \
             pointMB._get_climate(altitude, climate_type = 'monthly', year=yr)
     return clim
+
+######## get climate ########
+def get_climate_cal(years, altitude):
+    """
+    gets daily data from the float years in 'year', organized monthly.
+    extra year is added to meet glaciological calibration period (2011.68-2020.68)
+
+    Parameters
+    ----------
+    year : np array
+        float, natural years of the period I want the climate (2011.68-2018.68)
+    
+    altitude : int
+        altitude m.a.s.l. where to get the climate
+        
+
+    Returns
+    -------
+    pd dataframe: 2m? temperature at my altitude, temperature4melt, t
+    otal? precipitation, solid precipitation per day, grouped by month.
+
+    """
+    
+    column_names = ["temp", "temp4melt", "prcp", "prcpsol"]
+
+    clim = pd.DataFrame(columns = column_names, index=years)
+
+# Test model for the priod 2011-2019  # years are in normal years, not hydro.
+    for yr in years:
+        clim.temp[yr], clim.temp4melt[yr], clim.prcp[yr], clim.prcpsol[yr] = \
+            pointMB._get_climate(altitude, climate_type = 'monthly', year=yr)
+    
+    new_years = np.append(years,np.round(np.linspace(2018.76, 2020.68,24),2))
+    new_clim = pd.DataFrame(columns = column_names, index=new_years)
+    new_clim.iloc[-24:] = clim.iloc[-24:]
+    new_clim.iloc[:85] = clim
+    return new_clim

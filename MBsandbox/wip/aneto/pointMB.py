@@ -91,18 +91,18 @@ if cal == 'isimip3b':
     process_w5e5_data(gdir, temporal_resol=temporal_resol,
                       climate_type=baseline_climate) #Processes and writes the WFDE5_CRU & W5E5 daily baseline climate data for a glacier.
 
-    ssp = params.ssp
-    process_isimip_data(gdir,
-                        temporal_resol=temporal_resol,
-                        climate_historical_filesuffix='_daily_WFDE5_CRU',
-                        #Processes and writes the WFDE5_CRU & W5E5 daily baseline climate data for a glacier.
-                        #climate_historical_filesuffix = '',
-                        ensemble = 'mri-esm2-0_r1i1p1f1',
-                        # from temperature tie series the "median" ensemble
-                        ssp = ssp, flat = True,
-                        cluster = False,
-                        year_range = ('2005', '2050'),
-                        correct = False)
+#    ssp = params.ssp
+#    process_isimip_data(gdir,
+#                        temporal_resol=temporal_resol,
+#                        climate_historical_filesuffix='_daily_WFDE5_CRU',
+#                        #Processes and writes the WFDE5_CRU & W5E5 daily baseline climate data for a glacier.
+#                        #climate_historical_filesuffix = '',
+#                        ensemble = ensamble_name,#'mri-esm2-0_r1i1p1f1',
+#                        # from temperature tie series the "median" ensemble
+#                        ssp = ssp, flat = True,
+#                        cluster = False,
+#                        year_range = ('2005', '2070'),
+#                        correct = False)
 
 # 245 file does not exist!
 #process_isimip_data(gdir,
@@ -154,87 +154,6 @@ melt_f = 200
 pf = 1.5
 
 ###############################################################################
-# here the fun starts: this will be converted into TIModel_Sfc_Type_point class.
-hbins = np.NaN # Default is np.NaN
-interpolation_optim = False # Default is False
-
-tau_e_fold_yr = tau_e_fold_yr
-if melt_f_change == 'neg_exp':
-    assert tau_e_fold_yr > 0, "tau_e_fold_yr has to be above zero!"
-melt_f_change = melt_f_change
-assert melt_f_change in ['linear', 'neg_exp'], "melt_f_change has to be either 'linear' or 'neg_exp'"
-# ratio of snow melt_f to ice melt_f
-melt_f_ratio_snow_to_ice = 0.5 # Default is 0.5
-melt_f_update = melt_f_update
-spinup_yrs = 6 # Default is 6 years
-# amount of bucket and bucket naming depends on melt_f_update:
-if melt_f_update == 'monthly':
-    # for each month over 6 years a bucket-> in total 72!
-    buckets = np.arange(0, 12 * 6, 1).tolist()
-else:
-    raise Exception('melt_f_update has to be monthly in our case!') #InvalidParamsError('melt_f_update can either be annual or monthly!')
-# first bucket: if annual it is 'snow', if monthly update it is 0
-first_snow_bucket = buckets[0]
-
-columns = buckets + ['delta_kg/m2']
-# TODO: maybe also include snow_delta_kg/m2, firn_yr_1_delta_kg/m2...
-#  (only important if I add refreezing or a densification scheme)
-# comment: I don't need an ice bucket because this is assumed to be "infinite"
-# (instead just have a 'delta_kg/m2' bucket)
-
-# save the inversion height to later check if the same height is applied!!!
-inv_heights = surface_h = 3200 # Dummy value for now
-check_availability = True # Default is True
-
-# container template (has to be updatable -> pd_mb_template is property/setter thing)
-# use the distance_along_flowline as index
-_pd_mb_template = pd.DataFrame(0, index=np.arange(0,1),
-                                    columns=[]) # exectime-> directly addind columns here should be faster
-_pd_mb_template.index.name = 'distance_along_flowline'
-
-# bucket template:
-# make a different template for the buckets, because we want directly the right columns inside
-_pd_mb_template_bucket = pd.DataFrame(0, index=[3200.4],
-                                    columns=columns)  # exectime-> directly addind columns here should be faster
-_pd_mb_template_bucket.index.name = 'altitude (masl)'
-
-# storage containers for monthly and annual mb
-# columns are the months or years respectively
-# IMPORTANT: those need other columns
-pd_mb_monthly = _pd_mb_template.copy()
-pd_mb_annual = _pd_mb_template.copy()
-
-# bucket containers with buckets as columns
-pd_bucket = _pd_mb_template_bucket.copy()
-# exectime comment:  this line is quite expensive -> actually this line can be removed as
-# _pd_mb_template was defined more clever !!!
-# pd_bucket[columns] = 0
-# I don't need a total_kg/m2 because I don't know it anyway
-# as we do this before inversion!
-
-
-# storage container for buckets (in kg/m2)
-# columns are the buckets
-# (6*12 or 6 buckets depending if melt_f_update is monthly or annual)
-pd_bucket = pd_bucket
-
-#years = np.arange(2011-6, 2020, 1)
-#years = np.arange(2011-6, 2020, 1)
-ys = params.y_alfa #2011
-ye = params.y_omega #2020
-
-ys = params.y_ini #2011
-ye = params.y_fin #2020
-#ye=2020
-#mb_specific = mb_mod_monthly_0_5_m.get_specific_mb(heights=h,
-#                                        widths=w,
-#                                        year=years
-#                                        )#.mean()
-
-# as self.prcp is produced by changing prcp_fac
-# we need to update the prcp via prcp_fac by a property (see code after __init__)
-# (reason why there is here only a self._prcp_fac and no self.prcp_fac)
-#  to allow prcp_fac to be changed after instantiation
 #  prescribe the prcp_fac as it is instantiated
 prcp_fac = 2.89
 _prcp_fac = prcp_fac #because it is takes as constant.
@@ -253,12 +172,12 @@ t_liq = 2
 
 
 if cal == 'w5e5':
-    input_filesuffix = '_daily_{}'.format(baseline_climate)
-    filename = 'climate_historical'
-    fpath = gdir.get_filepath(filename, filesuffix=input_filesuffix)
-
+    #input_filesuffix = '_daily_{}'.format(baseline_climate)
+    #filename = 'climate_historical'
+    #fpath = gdir.get_filepath(filename, filesuffix=input_filesuffix)
+    fpath = '/home/francesc/data/aneto_glacier/climate/OGGM/OGGM-sfc-type/per_glacier/RGI60-11/RGI60-11.03/RGI60-11.03208/climate_historical_daily_WFDE5_CRU.nc'
 if cal == 'isimip3b':
-    fpath = f"/tmp/OGGM/OGGM-sfc-type/per_glacier/RGI60-11/RGI60-11.03/RGI60-11.03208/gcm_data_daily_ISIMIP3b_mri-esm2-0_r1i1p1f1_{ssp}_no_correction.nc"
+    fpath = f"/home/francesc/data/aneto_glacier/climate/OGGM/OGGM-sfc-type/per_glacier/RGI60-11/RGI60-11.03/RGI60-11.03208/gcm_data_daily_ISIMIP3b_{ensamble_name}_{ssp}_no_correction.nc"
 
 #xr.open_dataset(fpath) as xr_nc
 with xr.open_dataset(fpath) as xr_nc:
@@ -377,8 +296,8 @@ with xr.open_dataset(fpath) as xr_nc:
     #except:
     #    self.uncorrected_ref_hgt = xr_nc.ref_hgt
 
-    ys = years[0] if ys is None else ys
-    ye = years[-1] if ye is None else ye
+   # ys = spin_years[0] if ys is None else ys
+   # ye = years[-1] if ye is None else ye
 
 
 ####
@@ -484,12 +403,6 @@ def _get_climate(heights, climate_type, year=None):
         # line code below also quite expensive!
         prcpsol = prcp * clip_array(fac, 0, 1)
         return temp2d, temp2dformelt, prcp, prcpsol
-
-####
-#get lapse rate and climate data, if will be used in _get_climate:
-
-
-
 
 ########
 # def _get_2d_monthly_climate(self, heights, year=None):

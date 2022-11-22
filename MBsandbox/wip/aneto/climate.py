@@ -79,8 +79,8 @@ def get_climate_cal(years, altitude):
         clim.temp[yr], clim.temp4melt[yr], clim.prcp[yr], clim.prcpsol[yr] = \
             pointMB._get_climate(altitude, climate_type = 'monthly', year=yr)
     
-    new_years = np.append(years,np.round(np.linspace(2018.76, 2020.68,24),2))
+    new_years = np.append(years,np.round(np.linspace(2019.76, 2020.68,12),2))
     new_clim = pd.DataFrame(columns = column_names, index=new_years)
-    new_clim.iloc[-24:] = clim.iloc[-24:]
-    new_clim.iloc[:85] = clim
+    new_clim.iloc[-12:] = clim.iloc[-12:]
+    new_clim.iloc[:96] = clim
     return new_clim

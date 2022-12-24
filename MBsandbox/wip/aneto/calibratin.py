@@ -31,7 +31,7 @@ n = params.n
 in_data = get_raster_data(n)
 
 # open calibration m_f raster:
-o = xr.open_dataset(f'{out_path}/{n}x{n}/w5e5_/w5e5_melt_f_0_{y_alfa}-2019+1.nc')
+o = xr.open_dataset(f'{out_path}/{n}x{n}/w5e5_/w5e5_melt_f_0_{y_alfa}-2019+1_{int(rho*1000)}.nc')
 in_data[2] = o.to_array()
 
 #points onto glacier

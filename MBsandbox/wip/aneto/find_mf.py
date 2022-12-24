@@ -44,7 +44,7 @@ def paral(i):
     # spinup:
     #pd_bucket0 = spinup(years, altitude)
         
-    res = minimize_scalar(omnibus_minimize_mf, np.array([40,50]), args=(altitude, obs_mb, years), tol=0.001) # check mm and mmwe in side omnibus function
+    res = minimize_scalar(omnibus_minimize_mf,np.array([40,55]) ,args=(altitude, obs_mb, years), tol=0.001) # check mm and mmwe in side omnibus function
     #m_f.append(res.x) np.array([40,50])
     #    print(f'Point altitude is: {altitude} and its melt factor: {res.x}')
     return res.x #(m_f)
@@ -102,13 +102,13 @@ dir = f'{out_path}/{n}x{n}/{cal}_{ssp}/'
 if not os.path.exists(dir):
     os.makedirs(dir)
 
-ax1.set_title(f'{y_alfa}-{y_omega}+2_{n}x{n}_{cal}_{ssp}_{wspinup}{ensamble_name}')
+ax1.set_title(f'{y_alfa}-{y_omega}+2_{n}x{n}_{cal}_{ssp}_{wspinup}{ensamble_name}_{int(rho*1000)}')
 fig.colorbar(pos, ax=ax1)
-fig.show()  
-plt.savefig(f'{out_path}/{n}x{n}/{cal}_{ssp}/{ensamble_name}_melt_f_0_{y_alfa}-{y_omega}+2_test')
-plt.show()
+#fig.show()  
+plt.savefig(f'{out_path}/{n}x{n}/{cal}_{ssp}/{ensamble_name}_melt_f_0_{y_alfa}-{y_omega}+1_{int(rho*1000)}')
+#plt.show()
 
 aaa = in_data[2]
 
-aaa.to_netcdf(f'{out_path}/{n}x{n}/{cal}_{ssp}/{ensamble_name}_melt_f_0_{y_alfa}-{y_omega}+2_test.nc')
+aaa.to_netcdf(f'{out_path}/{n}x{n}/{cal}_{ssp}/{ensamble_name}_melt_f_0_{y_alfa}-{y_omega}+1_{int(rho*1000)}.nc')
 

@@ -33,7 +33,7 @@ cfg.initialize()
 cfg.PARAMS['use_multiprocessing'] = True
 cfg.PARAMS['use_rgi_area'] = False
 cfg.PARAMS['use_intersects'] = False
-cfg.PATHS['working_dir'] = utils.gettempdir(dirname='OGGM-sfc-type', reset=True)
+cfg.PATHS['working_dir'] = '/home/francesc/data/aneto_glacier/climate/'#utils.gettempdir(dirname='OGGM-sfc-type')#, reset=True) # TODO: mydir
 gdirs = workflow.init_glacier_directories(rgidf_simple_a)
 
 # The tasks below require downloading new data - we comment them for the tutorial, but it should work for you!
@@ -51,11 +51,8 @@ rgidf_simple_a
 
 log = logging.getLogger(__name__)
 
-cfg.initialize() #logging_level='WARNING'
-cfg.PARAMS['use_multiprocessing'] = False
-cfg.PARAMS['continue_on_error'] = False
-cfg.PATHS['working_dir'] = utils.gettempdir(dirname='OGGM-sfc-type')#, reset=True)
-cfg.PARAMS['use_intersects'] = False
+#cfg.initialize() #logging_level='WARNING'
+
 
 # use Huss flowlines # I don't use this
 base_url = ('https://cluster.klima.uni-bremen.de/~oggm/gdirs/oggm_v1.4/'
@@ -72,36 +69,39 @@ gdir
 
 temporal_resol = 'daily'
 baseline_climate = 'W5E5'
-baseline_climate = 'ISIMIP3B'
-baseline_climate = 'WFDE5_CRU'
-baseline_climate = 'WFDE5_CRU'
+#baseline_climate = 'ISIMIP3B'
+#baseline_climate = 'WFDE5_CRU'
+#baseline_climate = 'WFDE5_CRU'
 
 
-from MBsandbox.mbmod_daily_oneflowline import process_w5e5_data
+#from MBsandbox.mbmod_daily_oneflowline import process_w5e5_data
 #from projections_bayescalibration import process_isimip_data
-from MBsandbox.wip.projections_bayescalibration import process_isimip_data
+#from MBsandbox.wip.projections_bayescalibration import process_isimip_data
 
 # 2011-2019
-if cal == 'w5e5': 
-    process_w5e5_data(gdir, temporal_resol=temporal_resol,
-                      climate_type=baseline_climate) #Processes and writes the WFDE5_CRU & W5E5 daily baseline climate data for a glacier.
+#if cal == 'w5e5': 
+#process_w5e5_data(gdir, temporal_resol=temporal_resol,
+#                  climate_type=baseline_climate) #Processes and writes the WFDE5_CRU & W5E5 daily baseline climate data for a glacier.
 
 # 2020 --> 20xx
-if cal == 'isimip3b':
-    process_w5e5_data(gdir, temporal_resol=temporal_resol,
-                      climate_type=baseline_climate) #Processes and writes the WFDE5_CRU & W5E5 daily baseline climate data for a glacier.
-
+#if cal == 'isimip3b':
+#    process_w5e5_data(gdir, temporal_resol=temporal_resol,
+#                      climate_type=baseline_climate) #Processes and writes the WFDE5_CRU & W5E5 daily baseline climate data for a glacier.
+# TODO: do loop here
 #    ssp = params.ssp
-#    process_isimip_data(gdir,
+
+#for ssp in ssps:
+#    for ensamble_name in ensamble_names[:-1]:
+#        process_isimip_data(gdir,
 #                        temporal_resol=temporal_resol,
-#                        climate_historical_filesuffix='_daily_WFDE5_CRU',
+#                        climate_historical_filesuffix='_daily_W5E5',
 #                        #Processes and writes the WFDE5_CRU & W5E5 daily baseline climate data for a glacier.
 #                        #climate_historical_filesuffix = '',
 #                        ensemble = ensamble_name,#'mri-esm2-0_r1i1p1f1',
 #                        # from temperature tie series the "median" ensemble
 #                        ssp = ssp, flat = True,
 #                        cluster = False,
-#                        year_range = ('2005', '2070'),
+#                        year_range = ('2005', '2099'),
 #                        correct = False)
 
 # 245 file does not exist!
@@ -150,9 +150,6 @@ melt_f_change = 'neg_exp'  # the way how the melt factor changes over time
 tau_e_fold_yr = 1  # how fast the melt factor of snow converges to the ice melt factor 
 kwargs_for_TIModel_Sfc_Type = {'melt_f_update':melt_f_update, 'melt_f_change': melt_f_change, 'tau_e_fold_yr':tau_e_fold_yr}
 
-melt_f = 200
-pf = 1.5
-
 ###############################################################################
 #  prescribe the prcp_fac as it is instantiated
 prcp_fac = 2.89
@@ -168,16 +165,13 @@ t_melt = 0.
 t_solid = 0
 t_liq = 2
 
-#rho=800
-
-
 if cal == 'w5e5':
     #input_filesuffix = '_daily_{}'.format(baseline_climate)
     #filename = 'climate_historical'
     #fpath = gdir.get_filepath(filename, filesuffix=input_filesuffix)
-    fpath = '/home/francesc/data/aneto_glacier/climate/OGGM/OGGM-sfc-type/per_glacier/RGI60-11/RGI60-11.03/RGI60-11.03208/climate_historical_daily_WFDE5_CRU.nc'
+    fpath = '/home/francesc/data/aneto_glacier/climate/per_glacier/RGI60-11/RGI60-11.03/RGI60-11.03208/climate_historical_daily_W5E5.nc'
 if cal == 'isimip3b':
-    fpath = f"/home/francesc/data/aneto_glacier/climate/OGGM/OGGM-sfc-type/per_glacier/RGI60-11/RGI60-11.03/RGI60-11.03208/gcm_data_daily_ISIMIP3b_{ensamble_name}_{ssp}_no_correction.nc"
+    fpath = f"/home/francesc/data/aneto_glacier/climate/per_glacier/RGI60-11/RGI60-11.03/RGI60-11.03208/gcm_data_daily_ISIMIP3b_{ensamble_name}_{ssp}_no_correction.nc"
 
 #xr.open_dataset(fpath) as xr_nc
 with xr.open_dataset(fpath) as xr_nc:
@@ -288,7 +282,7 @@ with xr.open_dataset(fpath) as xr_nc:
         raise InvalidParamsError('grad_type can be either cte,'
                                  'var or var_an_cycle')
     grad = grad
-    ref_hgt = xr_nc.ref_hgt # i guess refference hgt is the default altitude of the climate data
+    ref_hgt = xr_nc.ref_hgt 
     # if climate dataset has been corrected once again
     # or non corrected reference height!
     #try:
@@ -296,8 +290,8 @@ with xr.open_dataset(fpath) as xr_nc:
     #except:
     #    self.uncorrected_ref_hgt = xr_nc.ref_hgt
 
-   # ys = spin_years[0] if ys is None else ys
-   # ye = years[-1] if ye is None else ye
+#    ys = spin_years[0] if ys is None else ys
+#    ye = years[-1] if ye is None else ye
 
 
 ####
@@ -364,6 +358,9 @@ def _get_climate(heights, climate_type, year=None):
     """
 
     y, m = floatyear_to_date(year)
+    ys=2005 #temp
+    ye=2099
+    
     if y < ys or y > ye:
         raise ValueError('year {} out of the valid time bounds: '
                          '[{}, {}]'.format(y, ys, ye))
@@ -392,6 +389,7 @@ def _get_climate(heights, climate_type, year=None):
         # todo: exectime the line code below is quite expensive in TIModel
         grad_temp *= (heights.repeat(len(pok)).reshape(grad_temp.shape) -
                       ref_hgt)
+        #print(f'ref_height: {ref_hgt}, cal:{cal}, grad_temp:{grad_temp}')
         temp2d = np.atleast_2d(itemp).repeat(npix, 0) + grad_temp
         # temp_for_melt is computed separately depending on mb_type
         # todo: exectime the line code below is quite expensive in TIModel
@@ -402,6 +400,12 @@ def _get_climate(heights, climate_type, year=None):
         fac = 1 - (temp2d - t_solid) / (t_liq - t_solid)
         # line code below also quite expensive!
         prcpsol = prcp * clip_array(fac, 0, 1)
+        #print(f'Grad_temp {grad_temp.mean()}, data={cal}') 
+        #print(f'temp:{temp2d.mean()}: data={cal}')
+        #print(f'temp4melt:{temp2dformelt.mean()}: data={cal}')
+        #print(f'ref_height {ref_hgt}') 
+        #print(f'temp:{temp2d.mean()}, ref_height: {ref_hgt}, cal:{cal}, grad_temp:{grad_temp.mean()}')
+        #print(f'cal:{cal}, temp2d:{temp2d.mean()}-itemp:{itemp.mean()}, grad_temp:{grad_temp.mean()}')
         return temp2d, temp2dformelt, prcp, prcpsol
 
 ########

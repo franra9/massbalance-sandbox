@@ -8,14 +8,14 @@ Created on Mon Oct 10 14:18:00 2022
 import sys
 import logging
 
-print('Number of arguments:'), print(len(sys.argv), 'arguments.')
-print('Argument List:'), print(str(sys.argv))
+#print('Number of arguments:'), print(len(sys.argv), 'arguments.')
+#print('Argument List:'), print(str(sys.argv))
 
 # thing to run many simulations at a time
-ens = int(sys.argv[1])
-ss = int(sys.argv[2])
-n = int(sys.argv[3])
-rho = int(sys.argv[4])
+#ens = int(sys.argv[1])
+#ss = int(sys.argv[2])
+#n = int(sys.argv[3])
+#rho = int(sys.argv[4])
 
 import numpy as np
 
@@ -27,10 +27,10 @@ cal = 'isimip3b'
 ensamble_names = ['ukesm1-0-ll_r1i1p1f2', 'gfdl-esm4_r1i1p1f1', 'ipsl-cm6a-lr_r1i1p1f1',
        'mpi-esm1-2-hr_r1i1p1f1', 'mri-esm2-0_r1i1p1f1', 'w5e5']
 
-#ens=1 #2
-#ss=1 #1
-#n=40#40
-#rho=850
+ens=1 #2
+ss=1 #1
+n=40#40
+rho=850
 
 rho = rho/1000
 #rho = 0.9 # 900kg/m3

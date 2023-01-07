@@ -49,6 +49,8 @@ for i in g_ind[0]:
 ########################
 def parallll(i):
 #for i in g_ind[0][:]:
+    dum=np.zeros(80*12)
+
     print(f'{np.where(g_ind[0]==i)} out of {len(g_ind[0])} points')
 
     altitude = in_data[4].values.flatten()[i] + in_data[3].values.flatten()[i] + \

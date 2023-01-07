@@ -21,8 +21,8 @@ def get_stats_proj(filepath):
     """
     Parameters
     ----------
-    file : pd dataframe path, in for of pickle
-        file from prediction.
+    file : pd dataframe path, in form of pickle
+        file from prediction. (.pkl)
 
     Returns
     -------
@@ -94,20 +94,40 @@ for i_ens in [0,1,2,3,4]:
         plt.hlines(0.1, xmin=2020.68,xmax=2060)
         plt.title('relative volume change 790')
   
-melt_y0=melt_y
+#melt_y0=melt_y
+
+# same for no sd results:
+proj_rhos_nosd=[]
+proj_enss_nosd=[]
+proj_ssps_nosd=[]
+
+for rho in [850]:
+    for ensamble_name in ensamble_names[:-1]:
+        for ssp in ssps:
+            filepath=f'{out_path}/{n}x{n}/projection/df/{ensamble_name}_{ssp}_no_sd_df.pkl'
+            results=get_stats_proj(filepath)
+            proj_ssps_nosd.append(results)
+        proj_enss_nosd.append(proj_ssps_nosd)
+        proj_ssps_nosd=[]
+    proj_rhos_nosd.append(proj_enss_nosd)
+    proj_enss_nosd=[]
+proj_pd_nosd = pd.DataFrame(proj_rhos_nosd)  
+
 
 ############################################
 #ensemble_mean #rho=850
-ensemble_sum=ensemble_sum850=ensemble_sum790=ensemble_sum910=0
+ensemble_sum=ensemble_sum850=ensemble_sum790=ensemble_sum910=ensemble_sum_nosd=0
 for i_ens in [0,1,2,3,4]:
     for i_ssp in [0,1,2]:
         ensemble_sum790 = ensemble_sum790 + np.array(proj_pd.iloc[0][i_ens][i_ssp][2])
         ensemble_sum850 = ensemble_sum850 + np.array(proj_pd.iloc[1][i_ens][i_ssp][2])
         ensemble_sum910 = ensemble_sum910 + np.array(proj_pd.iloc[2][i_ens][i_ssp][2])
-        
+        ensemble_sum_nosd = ensemble_sum_nosd + np.array(proj_pd_nosd.iloc[0][i_ens][i_ssp][2])
+
 ensemble_mean790=ensemble_sum790/15
 ensemble_mean850=ensemble_sum850/15
 ensemble_mean910=ensemble_sum910/15
+ensemble_mean_nosd=ensemble_sum_nosd/15
 
 ensemble_mean = ensemble_mean790-ensemble_mean850
 
@@ -121,7 +141,7 @@ for s in obj.columns: g_ind.append(s[1:])
 g_ind=np.array(g_ind, dtype=int)
 
 dum = np.zeros(n * n)
-dum[g_ind] = ensemble_mean
+dum[g_ind] = ensemble_mean_nosd-ensemble_mean850
 dum_resh = np.reshape(dum, [n, n])
 
 melt_y=dum_resh
@@ -132,16 +152,17 @@ melt_y[melt_y==0]=-1000
 fig, ax1 = plt.subplots(figsize=(13, 4), ncols=1)
 # plot just the positive data and save the
 # color "mappable" object returned by ax1.imshow
-pos = ax1.imshow(melt_y, vmin=-2, vmax=+2)
+pos = ax1.imshow(melt_y, vmin=-2, vmax=+20)
 
 # add the colorbar using the figure's method,
 # telling which mappable we're talking about and
 # which axes object it should be near
 
-ax1.set_title('melt_year(rho=790kgm-3)-melt_year(rho=850kgm-3)')
-plt.ylabel('latitude (pix)')
-plt.xlabel('longitude (pix)')
+ax1.set_title('melt_year(rho=850kgm-3)-melt_year_nosd(rho=850kgm-3)')
+plt.ylabel('latitude (m)')
+plt.xlabel('longitude (m)')
 fig.colorbar(pos, ax=ax1)
+fig.show()
 
 
 #n = params.n

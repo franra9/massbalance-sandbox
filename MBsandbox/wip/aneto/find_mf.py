@@ -102,13 +102,13 @@ dir = f'{out_path}/{n}x{n}/{cal}_{ssp}/'
 if not os.path.exists(dir):
     os.makedirs(dir)
 
-ax1.set_title(f'{y_alfa}-{y_omega}+2_{n}x{n}_{cal}_{ssp}_{wspinup}{ensamble_name}_{int(rho*1000)}')
+ax1.set_title(f'{y_alfa}-{y_omega}+2_{n}x{n}_{cal}_{ssp}_{wspinup}{ensamble_name}_{int(rho*1000)}_none_new')
 fig.colorbar(pos, ax=ax1)
 #fig.show()  
-plt.savefig(f'{out_path}/{n}x{n}/{cal}_{ssp}/{ensamble_name}_melt_f_0_{y_alfa}-{y_omega}+1_{int(rho*1000)}')
+plt.savefig(f'{out_path}/{n}x{n}/{cal}_{ssp}/{ensamble_name}_melt_f_0_{y_alfa}-{y_omega}+1_{int(rho*1000)}_none_new')
 #plt.show()
 
 aaa = in_data[2]
 
-aaa.to_netcdf(f'{out_path}/{n}x{n}/{cal}_{ssp}/{ensamble_name}_melt_f_0_{y_alfa}-{y_omega}+1_{int(rho*1000)}.nc')
+aaa.to_netcdf(f'{out_path}/{n}x{n}/{cal}_{ssp}/{ensamble_name}_melt_f_0_{y_alfa}-{y_omega}+1_{int(rho*1000)}_none_new.nc')
 

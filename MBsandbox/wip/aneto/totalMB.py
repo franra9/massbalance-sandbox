@@ -231,10 +231,10 @@ def spinup(spin_years, altitude, melt_f):
     
     for iyr in np.arange(0, len(spin_years)):
         ## altitude change
-        if abs(summ_mb_i) > 5000 : #5m w.e. # effect max ~4mm/month: (0.0298*4.5*30)
-            altitude = altitude + (summ_mb_i / (1000 * rho))  #geometric m
-            cl = get_climate(spin_years, altitude) # update climate for new altitude
-            summ_mb_i = 0
+        #if abs(summ_mb_i) > 1000 : #5m w.e. # effect max ~4mm/month: (0.0298*4.5*30)
+        #    altitude = altitude + (summ_mb_i / (1000 * rho))  #geometric m
+        #    cl = get_climate(spin_years, altitude) # update climate for new altitude
+        #    summ_mb_i = 0
         # if summ_mb : altitude = altitude - mbbbbb (...)
         
         pd_bucket = monthly_mb_sd(cl.iloc[iyr], pd_bucket)[1]
@@ -299,10 +299,10 @@ def omnibus_minimize_mf(melt_f, altitude=0, obs_mb=0, years=np.array([2012, 2012
     
     for iyr in np.arange(0, len(years) + 12): # add 24 months to get to 2020.68
         ## altitude change
-        if abs(summ_mb_i/(1000 * rho)) > 5 : #5m w.e. # effect max ~4mm/month: (0.0298*4.5*30)
-            altitude = altitude + (summ_mb_i / (1000 * rho))  #geometric m
-            cl = get_climate_cal(years, altitude) # update climate for new altitude
-            summ_mb_i = 0
+        #if abs(summ_mb_i/(1000 * rho)) > 1 : #5m w.e. # effect max ~4mm/month: (0.0298*4.5*30)
+        #    altitude = altitude + (summ_mb_i / (1000 * rho))  #geometric m
+        #    cl = get_climate_cal(years, altitude) # update climate for new altitude
+        #    summ_mb_i = 0
             
         #update bucket
         pd_bucket = monthly_mb_sd(cl.iloc[iyr], pd_bucket)[1]

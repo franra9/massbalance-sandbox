@@ -31,7 +31,7 @@ n = params.n
 in_data = get_raster_data(n)
 
 # open calibration m_f raster:
-o = xr.open_dataset(f'{out_path}/{n}x{n}/w5e5_/w5e5_melt_f_0_{y_alfa}-2019+1_{int(rho*1000)}.nc')
+o = xr.open_dataset(f'{out_path}/{n}x{n}/w5e5_/w5e5_melt_f_0_{y_alfa}-2019+1.nc')#{int(rho*1000)}.nc')
 in_data[2] = o.to_array()
 
 #points onto glacier
@@ -295,100 +295,101 @@ print(f'Time running future evolution is: {abs(now - now1)}')
 # aaa = a_mean
 
 # aaa.to_netcdf(f'{out_path}/{n}x{n}/{cal}_{ssp}/mean_melt_year_0_{y_alfa}-{y_omega}.nc')
+#######################
 
 ensamble_name=ensamble_names[0]
 
 ssp=ssps[0]
 
-r00=pd.read_pickle(f'{out_path}/{n}x{n}_850/calibration/{ensamble_name}_{ssp}_yearly_mb_{int(rho*1000)}.pkl')
+r00=pd.read_pickle(f'{out_path}/{n}x{n}/calibration/{ensamble_name}_{ssp}_yearly_mb_{int(rho*1000)}.pkl')
 r00=r00.mean(axis=1)
 
 ensamble_name=ensamble_names[0]
 
 ssp=ssps[1]
 
-r01=pd.read_pickle(f'{out_path}/{n}x{n}_850/calibration/{ensamble_name}_{ssp}_yearly_mb_{int(rho*1000)}.pkl')
+r01=pd.read_pickle(f'{out_path}/{n}x{n}/calibration/{ensamble_name}_{ssp}_yearly_mb_{int(rho*1000)}.pkl')
 r01=r01.mean(axis=1)
 ensamble_name=ensamble_names[0]
 
 ssp=ssps[2]
 
-r02=pd.read_pickle(f'{out_path}/{n}x{n}_850/calibration/{ensamble_name}_{ssp}_yearly_mb_{int(rho*1000)}.pkl')
+r02=pd.read_pickle(f'{out_path}/{n}x{n}/calibration/{ensamble_name}_{ssp}_yearly_mb_{int(rho*1000)}.pkl')
 r02=r02.mean(axis=1)
 ensamble_name=ensamble_names[1]
 
 ssp=ssps[0]
 
-r10=pd.read_pickle(f'{out_path}/{n}x{n}_850/calibration/{ensamble_name}_{ssp}_yearly_mb_{int(rho*1000)}.pkl')
+r10=pd.read_pickle(f'{out_path}/{n}x{n}/calibration/{ensamble_name}_{ssp}_yearly_mb_{int(rho*1000)}.pkl')
 r10=r10.mean(axis=1)
 ensamble_name=ensamble_names[1]
 
 ssp=ssps[1]
 
-r11=pd.read_pickle(f'{out_path}/{n}x{n}_850/calibration/{ensamble_name}_{ssp}_yearly_mb_{int(rho*1000)}.pkl')
+r11=pd.read_pickle(f'{out_path}/{n}x{n}/calibration/{ensamble_name}_{ssp}_yearly_mb_{int(rho*1000)}.pkl')
 r11=r11.mean(axis=1)
 ensamble_name=ensamble_names[1]
 
 ssp=ssps[2]
 
-r12=pd.read_pickle(f'{out_path}/{n}x{n}_850/calibration/{ensamble_name}_{ssp}_yearly_mb_{int(rho*1000)}.pkl')
+r12=pd.read_pickle(f'{out_path}/{n}x{n}/calibration/{ensamble_name}_{ssp}_yearly_mb_{int(rho*1000)}.pkl')
 r12=r12.mean(axis=1)
 ensamble_name=ensamble_names[2]
 
 ssp=ssps[0]
 
-r20=pd.read_pickle(f'{out_path}/{n}x{n}_850/calibration/{ensamble_name}_{ssp}_yearly_mb_{int(rho*1000)}.pkl')
+r20=pd.read_pickle(f'{out_path}/{n}x{n}/calibration/{ensamble_name}_{ssp}_yearly_mb_{int(rho*1000)}.pkl')
 r20=r20.mean(axis=1)
 ensamble_name=ensamble_names[2]
 
 ssp=ssps[1]
 
-r21=pd.read_pickle(f'{out_path}/{n}x{n}_850/calibration/{ensamble_name}_{ssp}_yearly_mb_{int(rho*1000)}.pkl')
+r21=pd.read_pickle(f'{out_path}/{n}x{n}/calibration/{ensamble_name}_{ssp}_yearly_mb_{int(rho*1000)}.pkl')
 r21=r21.mean(axis=1)
 ensamble_name=ensamble_names[2]
 
 ssp=ssps[2]
 
-r22=pd.read_pickle(f'{out_path}/{n}x{n}_850/calibration/{ensamble_name}_{ssp}_yearly_mb_{int(rho*1000)}.pkl')
+r22=pd.read_pickle(f'{out_path}/{n}x{n}/calibration/{ensamble_name}_{ssp}_yearly_mb_{int(rho*1000)}.pkl')
 r22=r22.mean(axis=1)
 ensamble_name=ensamble_names[3]
 
 ssp=ssps[0]
 
-r30=pd.read_pickle(f'{out_path}/{n}x{n}_850/calibration/{ensamble_name}_{ssp}_yearly_mb_{int(rho*1000)}.pkl')
+r30=pd.read_pickle(f'{out_path}/{n}x{n}/calibration/{ensamble_name}_{ssp}_yearly_mb_{int(rho*1000)}.pkl')
 r30=r30.mean(axis=1)
 ensamble_name=ensamble_names[3]
 
 ssp=ssps[1]
 
-r31=pd.read_pickle(f'{out_path}/{n}x{n}_850/calibration/{ensamble_name}_{ssp}_yearly_mb_{int(rho*1000)}.pkl')
+r31=pd.read_pickle(f'{out_path}/{n}x{n}/calibration/{ensamble_name}_{ssp}_yearly_mb_{int(rho*1000)}.pkl')
 r31=r31.mean(axis=1)
 ensamble_name=ensamble_names[3]
 
 ssp=ssps[2]
 
-r32=pd.read_pickle(f'{out_path}/{n}x{n}_850/calibration/{ensamble_name}_{ssp}_yearly_mb_{int(rho*1000)}.pkl')
+r32=pd.read_pickle(f'{out_path}/{n}x{n}/calibration/{ensamble_name}_{ssp}_yearly_mb_{int(rho*1000)}.pkl')
 r32=r32.mean(axis=1)
 ensamble_name=ensamble_names[4]
 
 ssp=ssps[0]
 
-r40=pd.read_pickle(f'{out_path}/{n}x{n}_850/calibration/{ensamble_name}_{ssp}_yearly_mb_{int(rho*1000)}.pkl')
+r40=pd.read_pickle(f'{out_path}/{n}x{n}/calibration/{ensamble_name}_{ssp}_yearly_mb_{int(rho*1000)}.pkl')
 r40=r40.mean(axis=1)
 ensamble_name=ensamble_names[4]
 
 ssp=ssps[1]
 
-r41=pd.read_pickle(f'{out_path}/{n}x{n}_850/calibration/{ensamble_name}_{ssp}_yearly_mb_{int(rho*1000)}.pkl')
+r41=pd.read_pickle(f'{out_path}/{n}x{n}/calibration/{ensamble_name}_{ssp}_yearly_mb_{int(rho*1000)}.pkl')
 r41=r41.mean(axis=1)
 ensamble_name=ensamble_names[4]
 
 ssp=ssps[2]
 
-r42=pd.read_pickle(f'{out_path}/{n}x{n}_850/calibration/{ensamble_name}_{ssp}_yearly_mb_{int(rho*1000)}.pkl')
+r42=pd.read_pickle(f'{out_path}/{n}x{n}/calibration/{ensamble_name}_{ssp}_yearly_mb_{int(rho*1000)}.pkl')
 r42=r42.mean(axis=1)
 
-calib=pd.read_pickle(f'{out_path}/{n}x{n}_850/calibration/w5e5__yearly_mb_{int(rho*1000)}.pkl')
+calib=pd.read_pickle(f'{out_path}/{n}x{n}/calibration/w5e5__yearly_mb.pkl')
 calib=calib.mean(axis=1)
 calib_mean=calib.mean()
 
@@ -421,7 +422,7 @@ plt.savefig(f'{out_path}/{n}x{n}/calibration/all_yearly_mb_{int(rho*1000)}')
 #plt.show()
 
 #yearly_mb.to_pickle(f'{out_path}/{n}x{n}/calibration/{ensamble_name}_{ssp}_yearly_mb.pkl')
-   # print(f'Point altitude is: {altitude} and its melt year is: {melt_y_i}')
+    # print(f'Point altitude is: {altitude} and its melt year is: {melt_y_i}')
 
 now1=time.time()
 print(f'Time running future evolution is: {abs(now - now1)}')

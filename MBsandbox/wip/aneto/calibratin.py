@@ -139,7 +139,7 @@ plt.xlabel('ydro year')
 #plt.xticks(np.linspace(2011.68,2019.68,9))
 plt.legend()
 plt.savefig(f'{out_path}/{n}x{n}/calibration/{ensamble_name}_{ssp}_yearly_mb')
-plt.show()
+#plt.show()
 
 yearly_mb.to_pickle(f'{out_path}/{n}x{n}/calibration/{ensamble_name}_{ssp}_yearly_mb.pkl')
    # print(f'Point altitude is: {altitude} and its melt year is: {melt_y_i}')

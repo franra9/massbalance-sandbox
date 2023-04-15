@@ -224,7 +224,7 @@ vmin = 1.3#min(toplot.flatten()[toplot.flatten()>0])
 
 # plot #
 # https://matplotlib.org/stable/gallery/color/colorbar_basics.html
-fig, ax1 = plt.subplots(figsize=(7, 7), ncols=1)
+fig, ax1 = plt.subplots(figsize=(7, 7),dpi=200, ncols=1)
 # Use imshow to plot the data
 #pos = ax1.imshow(toplot, vmin=min(toplot.flatten()[toplot.flatten()>0]), vmax=2, cmap=cmap)#cmap='PiYG')
 cmap = mpl.cm.viridis
@@ -264,7 +264,7 @@ vmin = -0.05 #min(toplot.flatten()[toplot.flatten()>0])
 
 # plot #
 # https://matplotlib.org/stable/gallery/color/colorbar_basics.html
-fig, ax1 = plt.subplots(figsize=(7, 7), ncols=1)
+fig, ax1 = plt.subplots(figsize=(7, 7),dpi=200, ncols=1)
 # Use imshow to plot the data
 #pos = ax1.imshow(toplot, vmin=min(toplot.flatten()[toplot.flatten()>0]), vmax=2, cmap=cmap)#cmap='PiYG')
 cmap = mpl.cm.PiYG
@@ -288,7 +288,7 @@ plt.show()
 
 # plot #
 # https://matplotlib.org/stable/gallery/color/colorbar_basics.html
-fig, ax1 = plt.subplots(figsize=(7, 7), ncols=1)
+fig, ax1 = plt.subplots(figsize=(7, 7),dpi=200, ncols=1)
 # Use imshow to plot the data
 #pos = ax1.imshow(toplot, vmin=min(toplot.flatten()[toplot.flatten()>0]), vmax=2, cmap=cmap)#cmap='PiYG')
 cmap = mpl.cm.PiYG
@@ -326,7 +326,7 @@ vmin = -3#min(toplot.flatten()[toplot.flatten()>0])
 
 # plot #
 # https://matplotlib.org/stable/gallery/color/colorbar_basics.html
-fig, ax1 = plt.subplots(figsize=(7, 7), ncols=1)
+fig, ax1 = plt.subplots(figsize=(7, 7),dpi=200, ncols=1)
 # Use imshow to plot the data
 #pos = ax1.imshow(toplot, vmin=min(toplot.flatten()[toplot.flatten()>0]), vmax=2, cmap=cmap)#cmap='PiYG')
 cmap = mpl.cm.viridis
@@ -350,10 +350,13 @@ plt.savefig(f'{out_path}/{n}x{n}/plots/fig33.png')
 plt.show()
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-#Figure 3.4: μ field absolute change μ(Hec = N one) − μ(Hec = 1m) and μ(Hec =
-#none) − μ(Hec = 5m) (b), In mm(day)−1K−1 for ρice = 850 at 32mx27m resolution.
-toplot_a = mf_850_1 - mf_850_0
-toplot_b = mf_850_5 - mf_850_0
+#Figure 3.4: μ field absolute change μ(Hec = None) − μ(Hec = 15) and μ(Hec =
+#1) − μ(Hec = 5m) (b), In mm(day)−1K−1 for ρice = 850 at 32mx27m resolution.
+#toplot_a = mf_850_1 - mf_850_0
+#toplot_b = mf_850_5 - mf_850_0
+toplot_a = mf_850_0 - mf_850_5
+toplot_b = mf_850_1 - mf_850_5
+
 toplot_a[toplot_a == 0] = np.nan
 toplot_b[toplot_b == 0] = np.nan
 toplot_a=toplot_a/30.4
@@ -361,48 +364,49 @@ toplot_b=toplot_b/30.4
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #define boundaries
-vmax = -0.00
-vmin = -0.05 #min(toplot.flatten()[toplot.flatten()>0])
+#vmax = -0.00
+#vmin = -0.05 #min(toplot.flatten()[toplot.flatten()>0])
+vmax = 0.06
+vmin = 0.00 #min(toplot.flatten()[toplot.flatten()>0])
 
 # plot #
 # https://matplotlib.org/stable/gallery/color/colorbar_basics.html
-fig, ax1 = plt.subplots(figsize=(7, 7), ncols=1)
+fig, ax1 = plt.subplots(figsize=(7, 7),dpi=200, ncols=1)
 # Use imshow to plot the data
 #pos = ax1.imshow(toplot, vmin=min(toplot.flatten()[toplot.flatten()>0]), vmax=2, cmap=cmap)#cmap='PiYG')
 cmap = mpl.cm.viridis
-bounds = np.linspace(vmin,vmax,21)
+bounds = np.linspace(vmin,vmax,13)
 norm = mpl.colors.BoundaryNorm(bounds, cmap.N, extend='both')
 
-pos = ax1.imshow(toplot_a, norm=norm, cmap=cmap)#cmap='PiYG')
+pos = ax1.imshow(toplot_a, norm=norm, cmap=cmap)
 
 plt.xticks(default_x_ticks, x, rotation=-45)
 plt.yticks(default_y_ticks, y)
-ax1.set_title('melt factor change\n' + r'$\mu(H=None)-\mu(H=1m)$' + r' [$mmd^{-1}K^{-1}$]')
+ax1.set_title('melt factor change\n' + r'$\mu(H=None)-\mu(H=5m)$' + r' [$mmd^{-1}K^{-1}$]')
 ax1.set_aspect(1090.5/1273.5)
 plt.ylabel('latitude from origin latitude [m]')
 plt.xlabel('longitude from origin longitude [m]')
-#plt.colorbar(pos, ax=ax1)
 
 plt.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap),
-             ax=ax1)#, label="melt factor change ($mmd^{-1}K^{-1}$)")
+             ax=ax1)
 
 plt.savefig(f'{out_path}/{n}x{n}/plots/fig34a.png')
 plt.show()
 
 # plot #
 # https://matplotlib.org/stable/gallery/color/colorbar_basics.html
-fig, ax1 = plt.subplots(figsize=(7, 7), ncols=1)
+fig, ax1 = plt.subplots(figsize=(7, 7),dpi=200, ncols=1)
 # Use imshow to plot the data
 #pos = ax1.imshow(toplot, vmin=min(toplot.flatten()[toplot.flatten()>0]), vmax=2, cmap=cmap)#cmap='PiYG')
 cmap = mpl.cm.viridis
-bounds = np.linspace(vmin,vmax,21)
+bounds = np.linspace(vmin,vmax,13)
 norm = mpl.colors.BoundaryNorm(bounds, cmap.N, extend='both')
 
 pos = ax1.imshow(toplot_b, norm=norm, cmap=cmap)#cmap='PiYG')
 
 plt.xticks(default_x_ticks, x, rotation=-45)
 plt.yticks(default_y_ticks, y)
-ax1.set_title('melt factor change\n' + r'$\mu(H=None)-\mu(H=5m)$' + r' [$mmd^{-1}K^{-1}$]')
+ax1.set_title('melt factor change\n' + r'$\mu(H=1m)-\mu(H=5m)$' + r' [$mmd^{-1}K^{-1}$]')
 ax1.set_aspect(1090.5/1273.5)
 plt.ylabel('latitude from origin latitude [m]')
 plt.xlabel('longitude from origin longitude [m]')
@@ -416,19 +420,19 @@ plt.show()
 
 #Figure 3.5: μ field relative change μ(Hec = N one) − μ(Hec = 1m) (a) and μ(Hec =
 #none) − μ(Hec = 5m) (b), In % for ρice = 850 at 32mx27m resolution.
-toplot_a = 100 * (mf_850_1 - mf_850_0)/mf_850_0 #PROBLEMA AQUI
-toplot_b = 100 * (mf_850_5 - mf_850_0)/mf_850_0 #PROBLEMA AQUI
+toplot_a = 100 * (mf_850_0 - mf_850_5)/mf_850_5 #PROBLEMA AQUI
+toplot_b = 100 * (mf_850_1 - mf_850_5)/mf_850_5 #PROBLEMA AQUI
 toplot_b[points_outliers_i] = np.nan
 toplot_a[points_outliers_i] = np.nan
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #define boundaries
-vmax = 0.5
-vmin = -2.5 #min(toplot.flatten()[toplot.flatten()>0])
+vmax = 3
+vmin = 0 #min(toplot.flatten()[toplot.flatten()>0])
 
 # plot #
 # https://matplotlib.org/stable/gallery/color/colorbar_basics.html
-fig, ax1 = plt.subplots(figsize=(7, 7), ncols=1)
+fig, ax1 = plt.subplots(figsize=(7, 7),dpi=200, ncols=1)
 # Use imshow to plot the data
 #pos = ax1.imshow(toplot, vmin=min(toplot.flatten()[toplot.flatten()>0]), vmax=2, cmap=cmap)#cmap='PiYG')
 cmap = mpl.cm.viridis
@@ -439,7 +443,7 @@ pos = ax1.imshow(toplot_a, norm=norm, cmap=cmap)#cmap='PiYG')
 
 plt.xticks(default_x_ticks, x, rotation=-45)
 plt.yticks(default_y_ticks, y)
-ax1.set_title('melt factor relative change\n' + r'$\mu(H=None)-\mu(H=1m)$' + r' [%]')
+ax1.set_title('melt factor relative change\n' + r'$\mu(H=None)-\mu(H=5m)$' + r' [%]')
 ax1.set_aspect(1090.5/1273.5)
 plt.ylabel('latitude from origin latitude [m]')
 plt.xlabel('longitude from origin longitude [m]')
@@ -453,7 +457,7 @@ plt.show()
 
 # plot #
 # https://matplotlib.org/stable/gallery/color/colorbar_basics.html
-fig, ax1 = plt.subplots(figsize=(7, 7), ncols=1)
+fig, ax1 = plt.subplots(figsize=(7, 7),dpi=200, ncols=1)
 # Use imshow to plot the data
 #pos = ax1.imshow(toplot, vmin=min(toplot.flatten()[toplot.flatten()>0]), vmax=2, cmap=cmap)#cmap='PiYG')
 cmap = mpl.cm.viridis
@@ -464,7 +468,7 @@ pos = ax1.imshow(toplot_b, norm=norm, cmap=cmap)#cmap='PiYG')
 
 plt.xticks(default_x_ticks, x, rotation=-45)
 plt.yticks(default_y_ticks, y)
-ax1.set_title('melt factor relative change\n' + r'$\mu(H=None)-\mu(H=5m)$' + r' [%]')
+ax1.set_title('melt factor relative change\n' + r'$\mu(H=1m)-\mu(H=5m)$' + r' [%]')
 ax1.set_aspect(1090.5/1273.5)
 plt.ylabel('latitude from origin latitude [m]')
 plt.xlabel('longitude from origin longitude [m]')
@@ -480,21 +484,28 @@ plt.show()
 #omitting surface distinction and H = 5m.
 toplot_a = (mf_850_5_no_sd - mf_850_5)/30.4
 toplot_b = 100 * (mf_850_5_no_sd - mf_850_5)/mf_850_5
+
+toplot_a[toplot_a==0] = np.nan
+toplot_a[toplot_a>-0.20] = np.nan
+
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #define boundaries
 vmax = -0.26
 vmin = -0.38 #min(toplot.flatten()[toplot.flatten()>0])
+#vmax=-0.3
+#vmin=-30
 
 # plot #
 # https://matplotlib.org/stable/gallery/color/colorbar_basics.html
-fig, ax1 = plt.subplots(figsize=(7, 7), ncols=1)
+fig, ax1 = plt.subplots(figsize=(7, 7),dpi=200, ncols=1)
 # Use imshow to plot the data
 #pos = ax1.imshow(toplot, vmin=min(toplot.flatten()[toplot.flatten()>0]), vmax=2, cmap=cmap)#cmap='PiYG')
-#cmap = mpl.cm.viridis
-#bounds = np.linspace(vmin,vmax,18)
-#norm = mpl.colors.BoundaryNorm(bounds, cmap.N, extend='both')
+cmap = mpl.cm.viridis
+bounds = np.linspace(vmin,vmax,16)
+norm = mpl.colors.BoundaryNorm(bounds, cmap.N, extend='both')
 
-pos = ax1.imshow(toplot_a, vmin=-0.38, vmax=-0.26)#, norm=norm, cmap=cmap)#cmap='PiYG')
+pos = ax1.imshow(toplot_a, norm=norm, cmap=cmap)#cmap='PiYG')
 
 plt.xticks(default_x_ticks, x, rotation=-45)
 plt.yticks(default_y_ticks, y)
@@ -515,7 +526,7 @@ vmax = -15
 vmin = -24 #min(toplot.flatten()[toplot.flatten()>0])
 
 
-fig, ax1 = plt.subplots(figsize=(7, 7), ncols=1)
+fig, ax1 = plt.subplots(figsize=(7, 7),dpi=200, ncols=1)#figsize=(7, 7), ncols=1)
 # Use imshow to plot the data
 #pos = ax1.imshow(toplot, vmin=min(toplot.flatten()[toplot.flatten()>0]), vmax=2, cmap=cmap)#cmap='PiYG')
 cmap = mpl.cm.viridis
@@ -550,6 +561,10 @@ plt.scatter(sf_altitude_flat, toplot, marker='+')
 plt.title('melt factor as a function of altitude')
 plt.ylabel('melt factor ' + r'$[mmd^{-1}K^{-1}]$')
 plt.xlabel('altitude [masl]')
+#obtain m (slope) and b(intercept) of linear regression line
+m, b = np.polyfit(sf_altitude_flat, toplot, 1)
+#add linear regression line to scatterplot 
+plt.plot(sf_altitude_flat, m*sf_altitude_flat+b, c="r")
 plt.savefig(f'{out_path}/{n}x{n}/plots/fig37.png')
 plt.show()
 #TODO: add regression line!
@@ -697,13 +712,14 @@ plt.show()
 #yearly_mb.to_pickle(f'{out_path}/{n}x{n}/calibration/{ensamble_name}_{ssp}_yearly_mb.pkl')
 # print(f'Point altitude is: {altitude} and its melt year is: {melt_y_i}')
 
-now1=time.time()
-print(f'Time running future evolution is: {abs(now - now1)}')
+#now1=time.time()
+#print(f'Time running future evolution is: {abs(now - now1)}')
 
 ######################################################
 ################ plots prediction ####################
 ######################################################
 import xarray as xr
+import time
 import params as params
 from params import * 
 #from projection_functions import omnibus_future
@@ -826,7 +842,7 @@ ensemble_mean850=ensemble_sum850/15
 ensemble_mean910=ensemble_sum910/15
 ensemble_mean_nosd=ensemble_sum_nosd/15
 
-ensemble_mean = ensemble_mean790-ensemble_mean850
+#ensemble_mean = ensemble_mean790-ensemble_mean850
 
 #plot
 # g_ind = []
@@ -920,7 +936,7 @@ ensemble_mean = ensemble_mean790-ensemble_mean850
 
 # # plot #
 # # https://matplotlib.org/stable/gallery/color/colorbar_basics.html
-# fig, ax1 = plt.subplots(figsize=(7, 7), ncols=1)
+# fig, ax1 = plt.subplots(figsize=(7, 7),dpi=200, ncols=1)
 # # Use imshow to plot the data
 # #pos = ax1.imshow(toplot, vmin=min(toplot.flatten()[toplot.flatten()>0]), vmax=2, cmap=cmap)#cmap='PiYG')
 # cmap = mpl.cm.viridis
@@ -955,7 +971,7 @@ ensemble_mean = ensemble_mean790-ensemble_mean850
 
 # # plot #
 # # https://matplotlib.org/stable/gallery/color/colorbar_basics.html
-# fig, ax1 = plt.subplots(figsize=(7, 7), ncols=1)
+# fig, ax1 = plt.subplots(figsize=(7, 7),dpi=200, ncols=1)
 # # Use imshow to plot the data
 # #pos = ax1.imshow(toplot, vmin=min(toplot.flatten()[toplot.flatten()>0]), vmax=2, cmap=cmap)#cmap='PiYG')
 # cmap = mpl.cm.viridis
@@ -979,96 +995,381 @@ ensemble_mean = ensemble_mean790-ensemble_mean850
 # plt.show()
 
 
+# Figure 3.9: Melt year for each point independently, with ρice = 850kgm3, H=5m. En-
+# semble mean for all GCMs and ssp scenarios.
+
 dum = np.zeros(n * n)
 dum[g_ind] = ensemble_mean850 #[0], [ensemble], [ssp], [790, 850, 910]
-dum_resh = np.reshape(dum, [n, n])
+toplot = np.reshape(dum, [n, n])
 
-melt_y=dum_resh
+tmp_limits = toplot < 2020
+toplot[toplot < 2020] = np.nan
+
+toplot[points_outliers_i] = np.nan
+
+melt_y=toplot 
         
 # plot
 # https://matplotlib.org/stable/gallery/color/colorbar_basics.html
-fig, ax1 = plt.subplots(figsize=(7, 7), ncols=1)
+fig, ax1 = plt.subplots(figsize=(7, 7),dpi=200, ncols=1)
 # plot just the positive data and save the
 # color "mappable" object returned by ax1.imshow
-pos = ax1.imshow(melt_y, vmin=min(melt_y.flatten()[melt_y.flatten()>0]-5), vmax=max(melt_y.flatten()))
+pos = ax1.imshow(toplot, vmin=2020, vmax=2055)
 
+
+
+
+
+vmin=2020
+vmax=2055
+cmap = mpl.cm.viridis
+bounds = np.linspace(vmin,2056,10)
+norm = mpl.colors.BoundaryNorm(bounds, cmap.N, extend='both')
+
+pos = ax1.imshow(toplot, norm=norm, cmap=cmap)
 # add the colorbar using the figure's method,
 # telling which mappable we're talking about and
 # which axes object it should be near
 
-ax1.set_title(f'melt year for ' + r'$\rho=850kgm^{-3}$')
+ax1.set_title(f'melt year for ' + r'$\rho=850kgm^{-3} [yr]$')
 ax1.set_aspect(1090.5/1273.5)
 plt.ylabel('latitude from origin latitude [m]')
 plt.xlabel('longitude from origin longitude [m]')
 
-fig.colorbar(pos, ax=ax1)
+plt.xticks(default_x_ticks, x, rotation=-45)
+plt.yticks(default_y_ticks, y)
+
+#fig.colorbar(pos, ax=ax1)
+
+
+plt.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap), ax=ax1)#norm=norm, cmap=cmap),ax=ax1)
+plt.savefig(f'{out_path}/40x40/plots/fig39.png')
 plt.show()
 
 #Figure 3.10: Melt year for each point independently, with ρice = 790kgm3 (a), ρice =
 #910kgm3 (b), H=5m.
+
+# TODO: canviar colors, com el que he fet servir abans per diferenciar <0 i >0
+
+#a)
+
 dum = np.zeros(n * n)
 dum[g_ind] = ensemble_mean790 - ensemble_mean850# proj_pd.iloc[0][i_ens][i_ssp][2]
-dum_resh = np.reshape(dum, [n, n])
+toplot = np.reshape(dum, [n, n])
 
-melt_y=dum_resh
+toplot[tmp_limits] = np.nan
+
+toplot[points_outliers_i] = np.nan
+
+melt_y=toplot
         
 # plot
 # https://matplotlib.org/stable/gallery/color/colorbar_basics.html
-fig, ax1 = plt.subplots(figsize=(7, 7), ncols=1)
+fig, ax1 = plt.subplots(figsize=(7, 7),dpi=200, ncols=1)
 # plot just the positive data and save the
 # color "mappable" object returned by ax1.imshow
-pos = ax1.imshow(melt_y, vmin=-2, vmax=+2)
+#pos = ax1.imshow(melt_y, vmin=-2, vmax=+2)
+vmin=-2
+vmax=+2
+cmap = cmap = mpl.cm.PiYG
+bounds = np.linspace(vmin,vmax,17)
+norm = mpl.colors.BoundaryNorm(bounds, cmap.N, extend='both')
+
+pos = ax1.imshow(toplot, norm=norm, cmap='PiYG')
 
 # add the colorbar using the figure's method,
 # telling which mappable we're talking about and
 # which axes object it should be near
 
-ax1.set_title(f'melt year difference' + r'$meltYear(\rho=790kgm^{-3})-meltYear(\rho=850kgm^{-3})$')
+plt.xticks(default_x_ticks, x, rotation=-45)
+plt.yticks(default_y_ticks, y)
+ax1.set_title(f'melt year difference [yr]\n' + r'$meltYear(\rho=790kgm^{-3})-meltYear(\rho=850kgm^{-3})$')
 ax1.set_aspect(1090.5/1273.5)
+
 plt.ylabel('latitude from origin latitude [m]')
 plt.xlabel('longitude from origin longitude [m]')
 
-fig.colorbar(pos, ax=ax1)
+#fig.colorbar(pos, ax=ax1)
+plt.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap), ax=ax1)#norm=norm, cmap=cmap),ax=ax1)
+plt.savefig(f'{out_path}/40x40/plots/fig310a.png')
 plt.show()
 
-i_ens=""
-i_ssp=":"
+
+# b)
+#dum = np.zeros(n * n)
+#dum[g_ind] = ensemble_mean910 - ensemble_mean850
+#toplot = np.reshape(dum, [n, n])
+#
+#toplot[tmp_limits] = np.nan
+#
+#toplot[points_outliers_i] = np.nan
+#
+#melt_y=toplot
+#        
+## plot
+## https://matplotlib.org/stable/gallery/color/colorbar_basics.html
+#fig, ax1 = plt.subplots(figsize=(7, 7),dpi=200, ncols=1)
+## plot just the positive data and save the
+## color "mappable" object returned by ax1.imshow
+#pos = ax1.imshow(melt_y, vmin=-2, vmax=+2)
+#
+# add the colorbar using the figure's method,
+# telling which mappable we're talking about and
+# which axes object it should be near
+#
+#ax1.set_title(f'melt year difference\n' + r'$meltYear(\rho=910kgm^{-3})-meltYear(\rho=850kgm^{-3})$')
+#ax1.set_aspect(1090.5/1273.5)
+#plt.ylabel('latitude from origin latitude [m]')
+#plt.xlabel('longitude from origin longitude [m]')
+#
+#plt.xticks(default_x_ticks, x, rotation=-45)
+#plt.yticks(default_y_ticks, y)
+#
+#fig.colorbar(pos, ax=ax1)
+#plt.show()
+
 dum = np.zeros(n * n)
 dum[g_ind] = ensemble_mean910 - ensemble_mean850
-dum_resh = np.reshape(dum, [n, n])
+toplot = np.reshape(dum, [n, n])
 
-melt_y=dum_resh
+toplot[tmp_limits] = np.nan
+
+toplot[points_outliers_i] = np.nan
+
+melt_y=toplot
         
 # plot
 # https://matplotlib.org/stable/gallery/color/colorbar_basics.html
-fig, ax1 = plt.subplots(figsize=(7, 7), ncols=1)
+fig, ax1 = plt.subplots(figsize=(7, 7),dpi=200, ncols=1)
 # plot just the positive data and save the
 # color "mappable" object returned by ax1.imshow
-pos = ax1.imshow(melt_y, vmin=-2, vmax=2)
+#pos = ax1.imshow(melt_y, vmin=-2, vmax=+2)
+vmin=-2
+vmax=+2
+cmap = cmap = mpl.cm.PiYG
+bounds = np.linspace(vmin,vmax,17)
+norm = mpl.colors.BoundaryNorm(bounds, cmap.N, extend='both')
+
+pos = ax1.imshow(toplot, norm=norm, cmap='PiYG')
 
 # add the colorbar using the figure's method,
 # telling which mappable we're talking about and
 # which axes object it should be near
 
-ax1.set_title(f'melt year difference' + r'$meltYear(\rho=910kgm^{-3})-meltYear(\rho=850kgm^{-3})$')
+plt.xticks(default_x_ticks, x, rotation=-45)
+plt.yticks(default_y_ticks, y)
+ax1.set_title(f'melt year difference [yr]\n' + r'$meltYear(\rho=910kgm^{-3})-meltYear(\rho=850kgm^{-3})$')
 ax1.set_aspect(1090.5/1273.5)
+
 plt.ylabel('latitude from origin latitude [m]')
 plt.xlabel('longitude from origin longitude [m]')
 
-fig.colorbar(pos, ax=ax1)
+#fig.colorbar(pos, ax=ax1)
+plt.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap), ax=ax1)#norm=norm, cmap=cmap),ax=ax1)
+plt.savefig(f'{out_path}/40x40/plots/fig310b.png')
 plt.show()
+
+#====================
+#i_ens=""
+#i_ssp=":"
+#dum = np.zeros(n * n)
+#dum[g_ind] = ensemble_mean910 - ensemble_mean850
+#dum_resh = np.reshape(dum, [n, n])
+
+#melt_y=dum_resh
+        
+# plot
+# https://matplotlib.org/stable/gallery/color/colorbar_basics.html
+#fig, ax1 = plt.subplots(figsize=(7, 7),dpi=200, ncols=1)
+# plot just the positive data and save the
+# color "mappable" object returned by ax1.imshow
+#pos = ax1.imshow(melt_y, vmin=-2, vmax=2)
+
+# add the colorbar using the figure's method,
+# telling which mappable we're talking about and
+# which axes object it should be near
+
+#ax1.set_title(f'melt year difference (yr)' + r'$meltYear(\rho=910kgm^{-3})-meltYear(\rho=850kgm^{-3})$')
+#ax1.set_aspect(1090.5/1273.5)
+#plt.ylabel('latitude from origin latitude [m]')
+#plt.xlabel('longitude from origin longitude [m]')
+#
+#fig.colorbar(pos, ax=ax1)
+#plt.show()
 
 #Figure 3.11: Melt year for each point independently, with ρice = 850kgm3, H=5m, no
 #surface distinction. Ensemble mean for all GCMs and ssp scenarios
+ensemble_mean790=ensemble_sum790/15
+ensemble_mean850=ensemble_sum850/15
+ensemble_mean910=ensemble_sum910/15
+ensemble_mean_nosd=ensemble_sum_nosd/15
 
 
+
+dum = np.zeros(n * n)
+dum[g_ind] = ensemble_mean_nosd - ensemble_mean850
+toplot = np.reshape(dum, [n, n])
+
+toplot[tmp_limits] = np.nan
+
+toplot[points_outliers_i] = np.nan
+
+melt_y=toplot
+        
+# plot
+# https://matplotlib.org/stable/gallery/color/colorbar_basics.html
+fig, ax1 = plt.subplots(figsize=(7, 7),dpi=200, ncols=1)
+# plot just the positive data and save the
+# color "mappable" object returned by ax1.imshow
+#pos = ax1.imshow(melt_y, vmin=-2, vmax=+2)
+vmin=0
+vmax=20
+cmap = mpl.cm.viridis
+bounds = np.linspace(vmin,vmax,17)
+norm = mpl.colors.BoundaryNorm(bounds, cmap.N, extend='both')
+
+pos = ax1.imshow(toplot, norm=norm, cmap=cmap)
+
+# add the colorbar using the figure's method,
+# telling which mappable we're talking about and
+# which axes object it should be near
+
+plt.xticks(default_x_ticks, x, rotation=-45)
+plt.yticks(default_y_ticks, y)
+ax1.set_title(f'melt year [yr]\n' + r'$meltYear(surf.dis=no)-meltYear(surf.dis=yes)$')
+ax1.set_aspect(1090.5/1273.5)
+
+plt.ylabel('latitude from origin latitude [m]')
+plt.xlabel('longitude from origin longitude [m]')
+
+#fig.colorbar(pos, ax=ax1)
+plt.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap), ax=ax1)#norm=norm, cmap=cmap),ax=ax1)
+plt.savefig(f'{out_path}/40x40/plots/fig311.png')
+plt.show()
+
+###############################################################################
 #Figure 3.12: Glacier area evolution during the 2020-2060 period. ρice = 850kgm3,
 #H=5m. Ensemble prediction for all GCMs and ssp scenarios. Colours represent the 3 ssp
 #...include legend!...
 
+# area #
+fig, ax1 = plt.subplots(figsize=(7, 7), dpi=200,ncols=1)
+for i_ens in [0,1,2,3,4]:
+    for i_ssp in [0,1,2]:
+        if i_ssp==0 :
+            ltype='0.05'
+        label={i_ens}
+        plt.plot(np.array(obj.index[0:412]+2020.68),np.array(proj_pd.iloc[1][i_ens][i_ssp][1][0:412])/proj_pd.iloc[1][i_ens][i_ssp][1][0],
+                 ltype,
+                 linewidth=0.3
+                 )
+plt.plot(np.array(obj.index[0:412]+2020.68),np.array(proj_pd.iloc[1][i_ens][i_ssp][1][0:412])/proj_pd.iloc[1][i_ens][i_ssp][1][0],
+         ltype,
+         linewidth=0.4,
+         label=f'projection members'
+         )
+a00=np.asarray((proj_pd.iloc[1][0][0][1]))/proj_pd.iloc[1][0][2][1][0]
+a11=np.asarray((proj_pd.iloc[1][0][0][1]))/proj_pd.iloc[1][0][2][1][0]
+a22=np.asarray((proj_pd.iloc[1][0][0][1]))/proj_pd.iloc[1][0][2][1][0]
+a03=np.asarray((proj_pd.iloc[1][1][0][1]))/proj_pd.iloc[1][0][2][1][0]
+a14=np.asarray((proj_pd.iloc[1][1][0][1]))/proj_pd.iloc[1][0][2][1][0]
+a20=np.asarray((proj_pd.iloc[1][1][1][1]))/proj_pd.iloc[1][0][2][1][0]
+a01=np.asarray((proj_pd.iloc[1][2][1][1]))/proj_pd.iloc[1][0][2][1][0]
+a12=np.asarray((proj_pd.iloc[1][2][1][1]))/proj_pd.iloc[1][0][2][1][0]
+a23=np.asarray((proj_pd.iloc[1][2][1][1]))/proj_pd.iloc[1][0][2][1][0]
+a04=np.asarray((proj_pd.iloc[1][3][1][1]))/proj_pd.iloc[1][0][2][1][0]
+a10=np.asarray((proj_pd.iloc[1][3][2][1]))/proj_pd.iloc[1][0][2][1][0]
+a21=np.asarray((proj_pd.iloc[1][3][2][1]))/proj_pd.iloc[1][0][2][1][0]
+a02=np.asarray((proj_pd.iloc[1][4][2][1]))/proj_pd.iloc[1][0][2][1][0]
+a13=np.asarray((proj_pd.iloc[1][4][2][1]))/proj_pd.iloc[1][0][2][1][0]
+a24=np.asarray((proj_pd.iloc[1][4][2][1]))/proj_pd.iloc[1][0][2][1][0]
+
+#mean
+aa=(a00+a01+a02+a03+a04+
+    a10+a11+a12+a13+a14+
+    a20+a21+a22+a23+a24)/15
+plt.plot(np.array(obj.index[0:412]+2020.68), 
+         aa[0:412],
+         'red',
+         linewidth=1,
+         label=f'ensemble mean'
+         )
+plt.hlines(0.1, xmin=2020.68,xmax=2055, label='10% threshold')
+plt.hlines(0.041, xmin=2020.68,xmax=2055,linestyles='--', label='2 ha threshold')
+
+ax1.set_aspect(25)
+plt.title('Relative area change')
+plt.ylabel('Area relative to Oct 2020 [-]')
+plt.xlabel('calendar year')
+plt.legend(loc='best', bbox_to_anchor=(1, 0.5))
+plt.savefig(f'{out_path}/40x40/plots/fig312.png')
+plt.show()
+
+
 #Figure 3.13: Glacier volume evolution during the 2020-2060 period. ρice = 850kgm3,
 #H=5m. Ensemble prediction for all GCMs and ssp scenarios. Colours represent the 3 ssp
 #...include legend!..
+
+# Volume #
+fig, ax1 = plt.subplots(figsize=(7, 7),dpi=200, ncols=1)
+for i_ens in [0,1,2,3,4]:
+    for i_ssp in [0,1,2]:
+        if i_ssp==0 :
+            ltype='0.05'
+        label={i_ens}
+        plt.plot(np.array(obj.index[0:412]+2020.68),np.array(proj_pd.iloc[1][i_ens][i_ssp][0][0:412])/proj_pd.iloc[1][i_ens][i_ssp][0][0],
+                 ltype,
+                 linewidth=0.3
+                 )
+plt.plot(np.array(obj.index[0:412]+2020.68),np.array(proj_pd.iloc[1][i_ens][i_ssp][0][0:412])/proj_pd.iloc[1][i_ens][i_ssp][0][0],
+         ltype,
+         linewidth=0.4,
+         label=f'projection members'
+         )
+b00=np.asarray((proj_pd.iloc[1][0][0][0]))/proj_pd.iloc[1][0][2][0][0]
+b11=np.asarray((proj_pd.iloc[1][0][0][0]))/proj_pd.iloc[1][0][2][0][0]
+b22=np.asarray((proj_pd.iloc[1][0][0][0]))/proj_pd.iloc[1][0][2][0][0]
+b03=np.asarray((proj_pd.iloc[1][1][0][0]))/proj_pd.iloc[1][0][2][0][0]
+b14=np.asarray((proj_pd.iloc[1][1][0][0]))/proj_pd.iloc[1][0][2][0][0]
+b20=np.asarray((proj_pd.iloc[1][1][1][0]))/proj_pd.iloc[1][0][2][0][0]
+b01=np.asarray((proj_pd.iloc[1][2][1][0]))/proj_pd.iloc[1][0][2][0][0]
+b12=np.asarray((proj_pd.iloc[1][2][1][0]))/proj_pd.iloc[1][0][2][0][0]
+b23=np.asarray((proj_pd.iloc[1][2][1][0]))/proj_pd.iloc[1][0][2][0][0]
+b04=np.asarray((proj_pd.iloc[1][3][1][0]))/proj_pd.iloc[1][0][2][0][0]
+b10=np.asarray((proj_pd.iloc[1][3][2][0]))/proj_pd.iloc[1][0][2][0][0]
+b21=np.asarray((proj_pd.iloc[1][3][2][0]))/proj_pd.iloc[1][0][2][0][0]
+b02=np.asarray((proj_pd.iloc[1][4][2][0]))/proj_pd.iloc[1][0][2][0][0]
+b13=np.asarray((proj_pd.iloc[1][4][2][0]))/proj_pd.iloc[1][0][2][0][0]
+b24=np.asarray((proj_pd.iloc[1][4][2][0]))/proj_pd.iloc[1][0][2][0][0]
+
+#mean
+bb=(b00+b01+b02+b03+b04+
+    b10+b11+b12+b13+b14+
+    b20+b21+b22+b23+b24)/15
+plt.plot(np.array(obj.index[0:412]+2020.68), 
+         bb[0:412],
+         'red',
+         linewidth=1,
+         label=f'ensemble mean'
+         )
+plt.plot(np.array(obj.index[0:412]+2020.68), 
+         aa[0:412],
+         'r--',
+         linewidth=1,
+         label=f'ensemble mean (area)'
+         )
+
+plt.hlines(0.1, xmin=2020.68,xmax=2055, label=f'10% threshold')
+#plt.hlines(0.08, colors='blue', xmin=2020.68,xmax=2055,linestyles='--', label=f'10% threshold (area)')
+
+ax1.set_aspect(22)
+plt.title('Relative volume change')
+plt.ylabel('Volume relative to Oct 2020 [-]')
+plt.xlabel('calendar year')
+plt.legend(loc='best', bbox_to_anchor=(1, 0.5))
+plt.savefig(f'{out_path}/40x40/plots/fig313.png')
+plt.show()
+
 
 
 
